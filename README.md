@@ -28,7 +28,7 @@ example
     router.get('/article',a,b,c); // "the article!"
     // and val == 3
 
-router-middleware accepts any HTTP verb as listed in the [methods moudle](https://github.com/jshttp/methods)
+router-middleware accepts any HTTP verb as listed in the [methods module](https://github.com/jshttp/methods)
 
 with ecstatic
 -------------
