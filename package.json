@@ -1,7 +1,7 @@
 {
   "name": "router-middleware",
   "author": "David Wee <rook2pawn@gmail.com> (http://rook2pawn.com)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
