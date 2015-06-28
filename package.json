@@ -1,0 +1,25 @@
+{
+  "name": "router-middleware",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rook2pawn/router-middleware.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rook2pawn/router-middleware/issues"
+  },
+  "homepage": "https://github.com/rook2pawn/router-middleware#readme",
+  "dependencies": {
+    "methods": "^1.1.1"
+  },
+  "devDependencies": {
+    "supertest": "^1.0.1"
+  }
+}
