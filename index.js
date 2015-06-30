@@ -1,4 +1,5 @@
 var methods = require('methods')
+var url = require('url')
 var routes = {}
 var status = require('./lib/statuscodes')
 var statusroutes = {}
@@ -13,11 +14,13 @@ var setter = function(method) {
   }
 }
 var next = function() {
-    routes[this.req.method][this.req.url][++this.index](this.req,this.res,next.bind({req:this.req,res:this.res,index:this.index}));
+  var pathname = url.parse(this.req.url).pathname
+  routes[this.req.method][pathname][++this.index](this.req,this.res,next.bind({req:this.req,res:this.res,index:this.index}));
 }
 var handle = function(req,res) {
-  if (routes[req.method][req.url])
-    routes[req.method][req.url][0](req,res,next.bind({req:req,res:res,index:0})); 
+  var pathname = url.parse(req.url).pathname
+  if (routes[req.method][pathname])
+    routes[req.method][pathname][0](req,res,next.bind({req:req,res:res,index:0})); 
   else if ((req.method == 'GET') && (routes.fileserver !== undefined))
     routes.fileserver(req,res)
   else {
