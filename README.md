@@ -5,6 +5,12 @@ This is a minimal middleware stack that supports unlimited middleware routes and
 
 Cleanly supports a fileserver in tandem with custom GET routes.
 
+Why?
+----
+
+While express is quite useful for a "total" package, it is itself a closed ecosystem because it pre-empts the native objects
+with augmented express-js mechanics. This pre-emption goes beyond the req and res objects, but also [error handling](https://github.com/rook2pawn/express-domains-issue). This module aims to be agnostic and modifies nothing.
+
 example
 -------
 
