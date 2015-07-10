@@ -38,8 +38,8 @@ example
 
 router-middleware accepts any HTTP verb as listed in the [methods module](https://github.com/jshttp/methods)
 
-with ecstatic fileserver
-------------------------
+with fileserver
+---------------
 
     var router = require('router-middleware');
     var ecstatic = require('ecstatic')({root:__dirname })
@@ -50,6 +50,17 @@ with ecstatic fileserver
     router.get('/foobar', function(req,res,next) {
       // any custom routes have precedence over fileserver
     })
+
+if fileserver is set, will serve as next() at the end of any GET middleware chain
+---------------------------------------------------------------------------------
+
+    var qs = require('querystring'); var url = require('url');
+    router.get('/admin', function(req,res,next) {
+      var obj = qs.parse(url.parse(req.url).query);
+      if (obj.token == validtoken) 
+        next() // will move to fileserver
+    })
+
   
 setting status code handlers 
 ----------------------------

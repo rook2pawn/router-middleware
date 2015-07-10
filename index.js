@@ -15,7 +15,13 @@ var setter = function(method) {
 }
 var next = function() {
   var pathname = url.parse(this.req.url).pathname
-  routes[this.req.method][pathname][++this.index](this.req,this.res,next.bind({req:this.req,res:this.res,index:this.index}));
+  this.index++;
+  if ((this.req.method == 'GET') && 
+      (routes[this.req.method][pathname][this.index] === undefined) && 
+      (routes.fileserver !== undefined)) {
+    routes.fileserver(this.req,this.res)     
+  } else 
+    routes[this.req.method][pathname][this.index](this.req,this.res,next.bind({req:this.req,res:this.res,index:this.index}));
 }
 var handle = function(req,res) {
   var pathname = url.parse(req.url).pathname
