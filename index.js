@@ -43,4 +43,5 @@ status.forEach(function(code) {
 handle.fileserver = function(fileserver) {
   routes.fileserver = fileserver
 }
+handle.statusroutes = statusroutes;
 module.exports = exports = handle
