@@ -42,7 +42,7 @@ var handle = function(req,res) {
   else if (routes[req.method].fns !== undefined) {
     var list = routes[req.method].fns;
     for (var i = 0; i < list.length; i++) {
-      if (list[i].fn(pathname) === true) {
+      if (list[i].fn(pathname,req) === true) {
         list[i].middleware[0](req,res,next.bind({req:req,res:res,index:0,fnindex:i})) 
         break;
       }
