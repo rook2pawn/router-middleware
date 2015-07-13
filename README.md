@@ -70,3 +70,19 @@ setting status code handlers
       res.write("not found :-(");
       res.end() 
     })
+
+routing via custom conditional functions
+----------------------------------------
+
+instead of a text string to match the url basename, you can instead have a function evaluate based on the url path basename. 
+
+    router.get(function(pathname) {
+      if (pathname.indexOf('/p') === 0)  
+        return true
+    }, function(req,res,next) {
+      res.write(' :p ')
+      res.end()
+    })
+
+    // GET /piano  --> :p
+
