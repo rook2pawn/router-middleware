@@ -22,6 +22,8 @@ var setter = function(method) {
 }
 var next = function() {
   var pathname = url.parse(this.req.url).pathname
+  if (pathname === undefined) 
+    return
   this.index++;
   if (this.fnindex === undefined) {
     if ((this.req.method == 'GET') && (routes[this.req.method][pathname][this.index] === undefined) && (routes.fileserver !== undefined)) {
