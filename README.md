@@ -45,3 +45,15 @@ With a Fileserver - (ecstatic)
 
     // any custom routes you set will have precedence 
     // all other GET requests falls-through to the fileserver
+
+
+Contributions
+=============
+
+Contributions are welcome! Pull requests are promptly reviewed.
+
+
+License
+=======
+
+MIT
