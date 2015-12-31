@@ -1,5 +1,5 @@
 var request = require('supertest')
-  , app = require('./index');
+  , app = require('../index');
 var response = require('response')
 var assert = require('assert')
 
