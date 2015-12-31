@@ -1,17 +1,26 @@
+Write fully featured http services without the bloat
+
+[![Build Status](https://travis-ci.org/rook2pawn/router-middleware.svg?branch=master)](https://travis-ci.org/rook2pawn/router-middleware)
+
 router-middleware
 =================
 
 Supports
 ========
-
 * Express style routing
 * Parameterized routes
 * Any template engines 
 * Any fileserver
     
-Features
-========
-* Use Stream based template engines
+Uses any Template Engine
+========================
+* Any Express-compatible template engine
+* Any stream-based template engine
+
+Uses any Fileserver
+===================
+* Ecstatic
+* etc.
 
 Example
 =======
@@ -26,9 +35,8 @@ Example
     // GET /user/joe
     // Hello joe!
 
-
-With Ecstatic
-=============
+With a Fileserver - (ecstatic)
+=============================
     var http = require('http')
     var router = require('router-middleware')
     var ecstatic = require('ecstatic')({root:__dirname })
@@ -36,4 +44,4 @@ With Ecstatic
     router.fileserver(ecstatic)
 
     // any custom routes you set will have precedence 
-    // any non-matching GET request falls-through to the fileserver
+    // all other GET requests falls-through to the fileserver
