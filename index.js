@@ -1,6 +1,8 @@
 var methods = require('methods')
+var lib = require('./lib')
 var url = require('url')
 var routes = {}
+var regexroutes = []
 var status = require('./lib/statuscodes')
 var statusroutes = {}
 var setter = function(method) {
@@ -8,9 +10,19 @@ var setter = function(method) {
     var args = [].concat.apply({},arguments).slice(1);
     if (typeof method == 'string') {
       var path = args[0];
-      if (typeof path == 'string')
-        routes[method.toUpperCase()][path] = args.slice(1);
-      else if (typeof path == 'function') {
+      if (typeof path == 'string') {
+        if (path.match(/:\w+/g) !== null) {
+          var keys = path.match(/:\w+/g).map(function(key) {
+            return key.replace(/^:/,'') 
+          })
+          var z = path.replace(/:\w+/g,'(\\w+)')
+          var re = new RegExp(z)
+          regexroutes.push({re:re,originalpath:path,keys:keys})
+          routes[method.toUpperCase()][path] = args.slice(1)
+        } else {
+          routes[method.toUpperCase()][path] = args.slice(1)
+        }
+      } else if (typeof path == 'function') {
         if (routes[method.toUpperCase()].fns == undefined) 
           routes[method.toUpperCase()].fns = [];
         routes[method.toUpperCase()].fns.push({fn:path, middleware:args.slice(1)})
@@ -38,20 +50,12 @@ var next = function() {
   }
 }
 var handle = function(req,res) {
-  var pathname = url.parse(req.url).pathname
-  if (routes[req.method][pathname])
-    routes[req.method][pathname][0](req,res,next.bind({req:req,res:res,index:0})); 
-  else if (routes[req.method].fns !== undefined) {
-    var list = routes[req.method].fns;
-    for (var i = 0; i < list.length; i++) {
-      if (list[i].fn(pathname,req) === true) {
-        list[i].middleware[0](req,res,next.bind({req:req,res:res,index:0,fnindex:i})) 
-        break;
-      }
-    }
-  } else if ((req.method == 'GET') && (routes.fileserver !== undefined))
+  var result = lib.match(req,routes,regexroutes)
+  if (result !== undefined) {
+    result[0](req,res,next.bind({req:req,res:res,index:0})); 
+  } else if ((req.method == 'GET') && (routes.fileserver !== undefined)) {
     routes.fileserver(req,res)
-  else {
+  } else {
     statusroutes[404](req,res)
   }
 }

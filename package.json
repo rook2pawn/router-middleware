@@ -1,17 +1,16 @@
 {
   "name": "router-middleware",
-  "author": "David Wee <rook2pawn@gmail.com> (http://rook2pawn.com)",
-  "version": "1.0.7",
+  "author": "",
+  "version": "2.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node test/test*.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rook2pawn/router-middleware.git"
   },
-  "author": "",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/rook2pawn/router-middleware/issues"
@@ -21,6 +20,7 @@
     "methods": "^1.1.1"
   },
   "devDependencies": {
+    "response": "^0.18.0",
     "supertest": "^1.0.1"
   }
 }
