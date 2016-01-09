@@ -1,5 +1,6 @@
 var request = require('supertest')
-  , app = require('../index');
+var router = require('../index');
+var app = router()
 var response = require('response')
 var assert = require('assert')
 
