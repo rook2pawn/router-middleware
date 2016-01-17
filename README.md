@@ -80,18 +80,6 @@ With a Express Template Engine
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine
 
-where an example of "yourengine" is 
-
-    function (filePath, options, callback) { // define the template engine
-      fs.readFile(filePath, function (err, content) {
-        if (err) return callback(new Error(err));
-        // this is an extremely simple template engine
-        var rendered = content.toString().replace('#title#', ''+ options.title +'')
-        .replace('#message#', ''+ options.message +'');
-        return callback(null, rendered);
-      })
-    }
-
 With a Stream Template Engine
 =============================
     var router = require('router-middleware')
