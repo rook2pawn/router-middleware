@@ -19,7 +19,7 @@ function Handle() {
   var render = function(basename, obj) {
     var res = this.res
     var viewEngine = that.props['view engine']
-    var filePath = path.join(__dirname, that.props['views'], basename).concat(".").concat(viewEngine)
+    var filePath = path.join(process.cwd(), that.props['views'], basename).concat(".").concat(viewEngine)
     if (fs.existsSync(filePath)) {
       that.engines[viewEngine](filePath,obj,function(err,rendered) {
         res.write(rendered)
@@ -43,7 +43,7 @@ function Handle() {
         handle(req,res)
       })
     } else if ((req.method == 'GET') && (that.fileserver !== undefined)) {
-      this.fileserver(req,res)
+      that.fileserver(req,res)
     } else {
       handle[404](req,res)
     }
@@ -60,9 +60,9 @@ function Handle() {
   handle.engine = function(extension,enginecb) {
     that.engines[extension] = enginecb
   }
+  handle.fileserver = function(_fileserver) {
+    that.fileserver = _fileserver
+  }
   return handle
-}
-Handle.prototype.setFileserver = function(_fileserver) {
-  this.fileserver = _fileserver
 }
 module.exports = exports = Handle
