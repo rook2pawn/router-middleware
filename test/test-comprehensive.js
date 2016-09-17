@@ -9,7 +9,7 @@ var y = JSON.stringify(x)
 
 app.get('/user', function(req, res,next){
   res.writeHead(200, {
-    'Content-Type': 'text/json',
+    'Content-Type': 'application/json',
     'Content-Length':y.length
   })
   res.write(y)
@@ -39,7 +39,7 @@ app.get('/user/:username/:type', function(req,res,next) {
 var x = request(app)
 x
 .get('/user')
-.expect('Content-Type', /json/)
+.expect('Content-Type', 'application/json')
 .expect('Content-Length', y.length)
 .expect(200)
 .end(function(err, res){
