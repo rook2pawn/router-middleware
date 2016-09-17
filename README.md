@@ -16,10 +16,6 @@ Features
 * Chainable middleware
 * Parameterized routes
 
-Any error handling
-==================
-
-    
 Any Template Engine
 ========================
 * Any Express-compatible template engine
@@ -76,9 +72,9 @@ With a Express Template Engine
 ================================
     var router = require('router-middleware')
     var app = router()
-    app.engine('view', yourengine)
+    app.engine('view', yourengine) // i.e. index.view
     app.set('views', './views'); // specify the views directory
-    app.set('view engine', 'view'); // register the template engine
+    app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
 
 With a Stream Template Engine
 =============================
@@ -113,4 +109,11 @@ Contributions are welcome! Pull requests are promptly reviewed.
 License
 =======
 
-MIT
+The MIT License (MIT)
+Copyright (c) 2016 David Wee - rook2pawn@gmail.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
