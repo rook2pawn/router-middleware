@@ -36,7 +36,7 @@ Example
   
     app.get('/user/:username', function(req,res,next) {
       res.writeHead(200)
-      res.end("Hello " + res.body.username + "!")
+      res.end("Hello " + req.params.username + "!")
     })    
  
     // GET /user/joe
