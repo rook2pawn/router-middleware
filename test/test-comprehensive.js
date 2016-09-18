@@ -6,7 +6,39 @@ var assert = require('assert')
 var fs = require('fs');
 
 
-test('test engine,content type,accept', function(t) {
+test('test parameterization', function(t) {
+  t.plan(2)
+  var app = router()
+  app.get('/user/:username/:postnumber',function(req,res) {
+    t.equal(req.params.postnumber,'341')
+    res.write(req.params.username)
+    res.end()
+  })
+  var x = request(app);
+  x
+  .get('/user/frank/341')
+  .end(function(err,res) {
+    t.equal(res.text, 'frank')
+  })
+})
+test('test parameterization using uuids', function(t) {
+  t.plan(1)
+  var app = router()
+  app.get('/user/:id',function(req,res) {
+    console.log(req.params)
+    res.write(req.params.id)
+    res.end()
+  })
+  var id = '0efa7810-5a6e-4427-9b32-63c9102bbfe'
+  var x = request(app);
+  x
+  .get('/user/'.concat(id))
+  .end(function(err,res) {
+    t.equal(res.text, id)
+  })
+})
+
+test('test view engine,next middleware call,content type,accept', function(t) {
   t.plan(3)
   var app = router()
   app.get('/user/:username',function(req,res,next) {
