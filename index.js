@@ -23,6 +23,7 @@ function Handle() {
     var filePath = path.join(process.cwd(), that.props['views'], basename).concat(".").concat(viewEngine)
     if (fs.existsSync(filePath)) {
       that.engines[viewEngine](filePath,obj,function(err,rendered) {
+        res.setHeader('Content-Type', 'text/html');
         res.write(rendered)
         res.end()
       })

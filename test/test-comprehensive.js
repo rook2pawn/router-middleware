@@ -1,63 +1,111 @@
 var request = require('supertest')
+var test = require('tape')
 var router = require('../index');
-var app = router()
 var response = require('response')
 var assert = require('assert')
+var fs = require('fs');
 
-var x = { name: 'tobi' }
-var y = JSON.stringify(x)
 
-app.get('/user', function(req, res,next){
-  res.writeHead(200, {
-    'Content-Type': 'application/json',
-    'Content-Length':y.length
+test('test engine,content type,accept', function(t) {
+  t.plan(3)
+  var app = router()
+  app.get('/user/:username',function(req,res,next) {
+    console.log("beep")
+    next()
+  },function(req,res,next) {
+    res.end(req.params.username)
   })
-  res.write(y)
-  res.end()
-});
+  app.get('/', function(req,res,next) {
+    t.equal(req.headers.accept,'cool/beans')
+    res.render('index', { title: 'Hey', message: 'Hello there!'});
+  })
 
-var val = 0;
-var a = function(req,res,next) {
-  val++;
-  next()
-};
-var b = function(req,res,next) {
-  val++;
-  next()
-};
-var c = function(req,res,next) {
-  val++;
-  res.write(val.toString())
-  res.end()
-};
-app.get('/foo',a,b,c);
+  app.engine('ntl', function (filePath, options, callback) { // define the template engine
+    fs.readFile(filePath, function (err, content) {
+      if (err) return callback(new Error(err));
+      // this is an extremely simple template engine
+      var rendered = content.toString().replace('#title#', ''+ options.title +'')
+      .replace('#message#', ''+ options.message +'');
+      return callback(null, rendered);
+    })
+  });
+  app.set('views', './views'); // specify the views directory
+  app.set('view engine', 'ntl'); // register the template engine
 
-app.get('/user/:username/:type', function(req,res,next) {
-  response.json(req.params).status(200).pipe(res)
+  var x = request(app);
+
+  x
+  .get('/user/frank')
+  .set('Accept', 'cool/beans')
+  .end(function(err,res) {
+    t.equal(res.text, 'frank')
+  })
+  x
+  .get('/')
+  .set('Accept', 'cool/beans')
+  .end(function(err,res) {
+    t.equal(res.headers['content-type'], 'text/html')
+  })
 })
 
-var x = request(app)
-x
-.get('/user')
-.expect('Content-Type', 'application/json')
-.expect('Content-Length', y.length)
-.expect(200)
-.end(function(err, res){
-  assert.deepEqual(res.body,{name:'tobi'})
-  if (err) throw err;
-});
 
-x
-.get('/foo')
-.expect('3')
-.end(function(err, res){
-  if (err) throw err;
-});
+test('test comprehensive', function(t) {
+  t.plan(2);
+  var x = { name: 'tobi' }
+  var y = JSON.stringify(x)
+  var app = router()
+  app.get('/user', function(req, res,next){
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Content-Length':y.length
+    })
+    res.write(y)
+    res.end()
+  });
 
-x
-.get('/user/ernie/update')
-.expect('Content-Type', 'application/json')
-.end(function(err, res){
-  assert.deepEqual(res.body, {username:'ernie',type:'update'})
-  if (err) throw err;
-});
+  var val = 0;
+  var a = function(req,res,next) {
+    val++;
+    next()
+  };
+  var b = function(req,res,next) {
+    val++;
+    next()
+  };
+  var c = function(req,res,next) {
+    val++;
+    res.write(val.toString())
+    res.end()
+  };
+  app.get('/foo',a,b,c);
+
+  app.get('/user/:username/:type', function(req,res,next) {
+    response.json(req.params).status(200).pipe(res)
+  })
+
+  var x = request(app)
+  x
+  .get('/user')
+  .expect('Content-Type', 'application/json')
+  .expect('Content-Length', y.length)
+  .expect(200)
+  .end(function(err, res){
+    t.deepEqual(res.body,{name:'tobi'})
+    if (err) throw err;
+  });
+
+  x
+  .get('/foo')
+  .expect('3')
+  .end(function(err, res){
+    if (err) throw err;
+  });
+
+  x
+  .get('/user/ernie/update')
+  .expect('Content-Type', 'application/json')
+  .end(function(err, res){
+    t.deepEqual(res.body, {username:'ernie',type:'update'})
+    if (err) throw err;
+  });
+})
