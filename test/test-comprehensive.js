@@ -4,6 +4,7 @@ var router = require('../index');
 var response = require('response')
 var assert = require('assert')
 var fs = require('fs');
+var qs = require('querystring')
 
 
 test('test parameterization', function(t) {
@@ -21,18 +22,21 @@ test('test parameterization', function(t) {
     t.equal(res.text, 'frank')
   })
 })
-test('test parameterization using uuids', function(t) {
-  t.plan(1)
+test('test parameterization using uuids and query', function(t) {
+  t.plan(2)
+  var qobj = {foo:'bar', life:'42' }
   var app = router()
   app.get('/user/:id',function(req,res) {
     console.log(req.params)
+    console.log(req.query)
+    t.deepEquals(req.query, qobj)
     res.write(req.params.id)
     res.end()
   })
   var id = '0efa7810-5a6e-4427-9b32-63c9102bbfe'
   var x = request(app);
   x
-  .get('/user/'.concat(id))
+  .get('/user/'.concat(id).concat('?').concat(qs.stringify(qobj)))
   .end(function(err,res) {
     t.equal(res.text, id)
   })
