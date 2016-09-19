@@ -87,8 +87,8 @@ And you could invoke it through a route like this
       })
     })
 
-
-Where this would lookup 'views/animal_list.view' whose content was something like
+Where the arguments and options of res.streamrender end up going to the user-defined callback at app.streamengine, 
+and this would lookup 'views/animal_list.view' whose content was something like
 
     <div template='animal'>
        <a key="name"></a>
