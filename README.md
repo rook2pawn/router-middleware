@@ -17,9 +17,18 @@ Server B is built on top of router-middleware and it too, has a cache algorithm.
 How is this done? A router that is purpose-built expressly for 
 
 * Streaming Data with Templates over HTTP/HTML
-* Streaming Data Webservices over HTTP
+* Streaming Data Webservices over HTTP 
 * Producing smoother CPU, Disk, I/O usages for *any size* result set of data that needs to be relayed
 * More scalability!
+
+
+To be fair, streaming data webservices over HTTP can be done with something as simple as, and yes, Express is suitable as well for this task.
+
+    http.createServer(function(req,res) {
+      mystream.pipe(res) 
+    })
+
+
 
 
 html-template front and center
