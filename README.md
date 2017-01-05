@@ -5,6 +5,110 @@ Write fully featured http services without the bloat
 router-middleware
 =================
 
+Supports
+========
+* Legacy Support for Express Template Engines
+* Legacy Support for Express Routes
+* Legacy Support for Express Syntax 
+
+Features
+========
+* Chainable middleware
+* familiar req.params and req.query are there
+* identical routing to what you are used to
+
+Any Template Engine
+========================
+* Any Express-compatible template engine
+* Any stream-based template engine
+* Tagged Template Strings
+* You design it!
+
+Any Fileserver
+===================
+* Ecstatic
+* express.static 
+* fs
+
+Example
+=======
+    var http = require('http')
+    var router = require('router-middleware')
+    var app = router()
+    var server = http.createServer(app)
+  
+    app.get('/user/:username', function(req,res,next) {
+      res.writeHead(200)
+      res.end("Hello " + req.params.username + "!")
+    })    
+ 
+    // GET /user/joe
+    // Hello joe!
+
+With Fileserver Ecstatic
+========================
+    var http = require('http')
+    var router = require('router-middleware')
+    var app = router()
+    var ecstatic = require('ecstatic')({root:__dirname })
+    var server = http.createServer(app)
+
+    app.fileserver(ecstatic)
+
+    // any custom routes you set will have precedence 
+    // all other GET requests falls-through to the fileserver
+
+With Fileserver Express
+=======================
+    var http = require('http')
+    var router = require('router-middleware')
+    var app = router() 
+    var express = require('express')
+    var server = http.createServer(app)
+
+    app.fileserver(express.static('mydirectory'))
+
+    // any custom routes you set will have precedence 
+    // all other GET requests falls-through to the fileserver
+
+With a Express Template Engine
+================================
+    var router = require('router-middleware')
+    var app = router()
+    app.engine('view', yourengine) // i.e. index.view
+    app.set('views', './views'); // specify the views directory
+    app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
+
+With a Stream Template Engine
+=============================
+    var router = require('router-middleware')
+    var through = require('through')
+
+    var app = router()
+    app.streamengine('view', yourengine)
+    app.set('views', './views'); // specify the views directory
+    app.set('view engine', 'view'); // register the template engine
+
+
+where "yourengine" callback will be called with filepath, options, and the response object.
+
+Example callback:
+
+    function (filePath, options, res) { // define the template engine
+      fs
+      .createReadStream(filePath)
+      .pipe(through(function write(data) {
+          this.queue(data.toString().toUpperCase()) //data *must* not be null
+        },  
+        function end () { //optional
+          this.queue(null)
+        })) 
+      .pipe(res)
+    }
+
+
+
+
 A Tale of Two Servers, Two Stories
 ==================================
 
@@ -129,106 +233,7 @@ If we wait on completion, here's what goes wrong:
 2. It doesn't scale. Waiting on completion will result in idle-cpus that wait then explode with usage when completed. Streams allow the intelligent use of resources and maximizes scalability since we are allowing both producers and consumers to pipe results into toolchains before completion, allowing the computer to work on an as needed basis.
 3. Non-Composibility. Good tools often follow UNIX tool principles. 
 
-Supports
-========
-* Legacy Support for Express Template Engines
-* Legacy Support for Express Routes
-* Legacy Support for Express Syntax 
 
-Features
-========
-* Chainable middleware
-* familiar req.params and req.query are there
-* identical routing to what you are used to
-
-Any Template Engine
-========================
-* Any Express-compatible template engine
-* Any stream-based template engine
-* Tagged Template Strings
-* You design it!
-
-Any Fileserver
-===================
-* Ecstatic
-* express.static 
-* fs
-
-Example
-=======
-    var http = require('http')
-    var router = require('router-middleware')
-    var app = router()
-    var server = http.createServer(app)
-  
-    app.get('/user/:username', function(req,res,next) {
-      res.writeHead(200)
-      res.end("Hello " + req.params.username + "!")
-    })    
- 
-    // GET /user/joe
-    // Hello joe!
-
-With Fileserver Ecstatic
-========================
-    var http = require('http')
-    var router = require('router-middleware')
-    var app = router()
-    var ecstatic = require('ecstatic')({root:__dirname })
-    var server = http.createServer(app)
-
-    app.fileserver(ecstatic)
-
-    // any custom routes you set will have precedence 
-    // all other GET requests falls-through to the fileserver
-
-With Fileserver Express
-=======================
-    var http = require('http')
-    var router = require('router-middleware')
-    var app = router() 
-    var express = require('express')
-    var server = http.createServer(app)
-
-    app.fileserver(express.static('mydirectory'))
-
-    // any custom routes you set will have precedence 
-    // all other GET requests falls-through to the fileserver
-
-With a Express Template Engine
-================================
-    var router = require('router-middleware')
-    var app = router()
-    app.engine('view', yourengine) // i.e. index.view
-    app.set('views', './views'); // specify the views directory
-    app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
-
-With a Stream Template Engine
-=============================
-    var router = require('router-middleware')
-    var through = require('through')
-
-    var app = router()
-    app.streamengine('view', yourengine)
-    app.set('views', './views'); // specify the views directory
-    app.set('view engine', 'view'); // register the template engine
-
-
-where "yourengine" callback will be called with filepath, options, and the response object.
-
-Example callback:
-
-    function (filePath, options, res) { // define the template engine
-      fs
-      .createReadStream(filePath)
-      .pipe(through(function write(data) {
-          this.queue(data.toString().toUpperCase()) //data *must* not be null
-        },  
-        function end () { //optional
-          this.queue(null)
-        })) 
-      .pipe(res)
-    }
 
 
 
