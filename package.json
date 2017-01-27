@@ -1,12 +1,21 @@
 {
   "name": "router-middleware",
-  "author": "",
-  "version": "2.1.6",
+  "author": "David Wee <rook2pawn@gmail.com> (http://rook2pawn.com)",
+  "version": "2.1.7",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "node test/test*.js"
   },
+  "keywords" : [
+    "express",
+    "router",
+    "tree",
+    "tree router",
+    "stream",
+    "streaming template",
+    "stream template"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rook2pawn/router-middleware.git"
