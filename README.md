@@ -1,37 +1,32 @@
-Write fully featured http services without the bloat
+Write fully featured http services and streaming templates without the bloat
 
 [![Build Status](https://travis-ci.org/rook2pawn/router-middleware.svg?branch=master)](https://travis-ci.org/rook2pawn/router-middleware)
 
-router-middleware
-=================
+# router-middleware
 
-Supports
-========
+
+## Supports
 * Legacy Support for Express Template Engines
 * Legacy Support for Express Routes
 * Legacy Support for Express Syntax 
 
-Features
-========
+## Features
 * Chainable middleware
 * familiar req.params and req.query are there
 * identical routing to what you are used to
 
-Any Template Engine
-========================
+## Any Template Engine
 * Any Express-compatible template engine
 * Any stream-based template engine
 * Tagged Template Strings
 * You design it!
 
-Any Fileserver
-===================
+## Any Fileserver
 * Ecstatic
 * express.static 
 * fs
 
-Example
-=======
+### Example
     var http = require('http')
     var router = require('router-middleware')
     var app = router()
@@ -45,8 +40,7 @@ Example
     // GET /user/joe
     // Hello joe!
 
-With Fileserver Ecstatic
-========================
+### With Fileserver Ecstatic
     var http = require('http')
     var router = require('router-middleware')
     var app = router()
@@ -58,8 +52,7 @@ With Fileserver Ecstatic
     // any custom routes you set will have precedence 
     // all other GET requests falls-through to the fileserver
 
-With Fileserver Express
-=======================
+### With Fileserver Express
     var http = require('http')
     var router = require('router-middleware')
     var app = router() 
@@ -71,16 +64,14 @@ With Fileserver Express
     // any custom routes you set will have precedence 
     // all other GET requests falls-through to the fileserver
 
-With a Express Template Engine
-================================
+### With a Express Template Engine
     var router = require('router-middleware')
     var app = router()
     app.engine('view', yourengine) // i.e. index.view
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
 
-With a Stream Template Engine
-=============================
+### With a Stream Template Engine
     var router = require('router-middleware')
     var through = require('through')
 
@@ -106,11 +97,119 @@ Example callback:
       .pipe(res)
     }
 
+## Main Methods
+
+### .\[method\] (get, post, ... etc)
+
+Attach a handler to any [HTTP Method](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods) from the [full method verb list](https://github.com/jshttp/methods/ "METHODS")
+Handler has the signature function(req, res, next).
+
+    app.get('/user/email',function(req,res,next) {
+      res.write('foo@boop.com');
+      res.end();
+    })
+
+### .use
+
+Add a use handler that is placed in front of every call.
+
+    app.use(logger);
+    app.use(parser);
+
+### .fileserver
+
+Attach any fileserver. Any custom routes you set will have precedence. All other unmatched GET requests falls-through to the fileserver.
+
+## Accessory methods
+
+### .engine
+
+Use templates with the same signature as express engines.
+
+    app.engine('view', yourengine) // i.e. index.view
+    app.set('views', './views'); // specify the views directory
+    app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)   
+
+### .streamengine
+
+    app.streamengine('view', your_stream_engine)
+    app.set('views', './views'); // specify the views directory
+    app.set('view engine', 'view'); // register the template engine
+
+#### An Example streamengine 
+
+    var HtmlTemplate = require('html-template')
+    app.streamengine('view', function(filename, opts, res) {
+      // looking for {template: <template string name>, list: <list of objects to write> }
+      res.setHeader('Content-Type','text/html');
+      var html = HtmlTemplate()
+      fs.createReadStream(filename)
+          .pipe(html)
+          .pipe(res)
+      ;
+      opts.forEach(function(opt) {
+        var template = html.template(opt.template,{include:false});
+        opt.list.forEach(function(obj) {
+          template.write(obj)
+        })
+        template.end()
+      })
+    })
+
+#### Using this example streamengine
+
+    res.streamrender('teamslist', [{
+      template:'poll',
+      list:JSON.parse(fs.readFileSync('poll_ap.json')).map(function(poll) {
+        return {
+          '[key=week]': {
+            _text : poll.week
+          },
+          '[key=date]': {
+            _text : poll.date
+          },
+          '[key=position]': {
+            _text : poll.position
+          },
+          '[key=school]': {
+            _text : poll.school,
+            href: '/team/'.concat(poll.uuid)
+          },
+          '[key=conference]': {
+            _text : poll.conference
+          }
+        }
+      })
+    }]
+
+Where teamslist.view looks like
+
+    <table>
+      <tr>
+        <th>Week</th>
+        <th>date</th>
+        <th>Position</th>
+        <th>School</th>
+        <th>Conference</th>
+      </tr>
+      <tr template='poll'>
+        <td key='week'></td>  
+        <td key='date'></td>  
+        <td key='position'></td>  
+        <td><a key='school'></a></td>  
+        <td key='conference'></td>  
+      </tr>
+    </table>
+
+### .set
+
+Used to set properties for .engine and .streamengine.
+
+    app.set('views', './views'); // specify the views directory
+    app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)   
 
 
-
-A Tale of Two Servers, Two Stories
-==================================
+### A Tale of Two Servers, Two Stories
 
 Suppose customer Jim is shopping for shoes online. 
 
@@ -135,14 +234,12 @@ To be fair, streaming data webservices over HTTP can be done with something as s
 
 
 
-html-template front and center
-==============================
+### html-template front and center
 
 The example here is using the very awesome [html-template](https://npmjs.org/package/html-template) as its stream mechanism, however you are free to roll your own and simply use the callback in streamengine.
 
 
-Example
-=======
+### Example
 
 Using [html-template](https://npmjs.org/package/html-template) and [ecstatic](https://npmjs.org/package/estatic)
 
@@ -217,15 +314,13 @@ Note that a request for anything that does not match any predefined GET routes f
 So while a request to "/" gives us the streamrender list, "/api"  would default to the fileserver which in this case would look up /web/api/index.html.
 
 
-Why?
-====
+### Why?
 
 Because the use case is so compelling and express simply could not support it. The use case being able to stream responses of templated data. For instance: suppose I load the top 1000 selling shoes from a shoe outlet. Now suppose each shoe has a whole bunch of data with each database entry and for some reason or another the DB lookup is taking a bit longer to complete, and that each entry is going to be formatted according to some HTML template. What we do not want is to have to have the user wait for the entire thing to be finished before they even see one shoe being listed: we want to be able to stream back the results to the user in real time as they are being loaded by the database or whatever particular constraints there are on the service.
 
 Or consider a purely HTTP service that we are writing. We know for a fact we won't have server-to-browser relationship and instead it will be service to service. We want these **services to be composable**. We can have one server deliver results and have the consuming server simply pipe it in to its next destination. 
 
-What's Wrong with Wait on Completion?
-=====================================
+### What's Wrong with Wait on Completion?
 
 If we wait on completion, here's what goes wrong:
 
@@ -237,14 +332,12 @@ If we wait on completion, here's what goes wrong:
 
 
 
-Contributions
-=============
+### Contributions
 
 Contributions are welcome! Pull requests are promptly reviewed.
 
 
-License
-=======
+### License
 
 The MIT License (MIT)
 Copyright (c) 2016 David Wee - rook2pawn@gmail.com

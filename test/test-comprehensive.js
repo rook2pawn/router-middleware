@@ -1,10 +1,9 @@
-var request = require('supertest')
-var test = require('tape')
+var request = require('supertest');
+var test = require('tape');
 var router = require('../index');
-var response = require('response')
-var assert = require('assert')
+var response = require('response');
 var fs = require('fs');
-var qs = require('querystring')
+var qs = require('querystring');
 
 
 test('test parameterization', function(t) {
@@ -43,7 +42,7 @@ test('test parameterization using uuids and query', function(t) {
 })
 
 test('test view engine,next middleware call,content type,accept', function(t) {
-  t.plan(3)
+  t.plan(4)
   var app = router()
   app.get('/user/:username',function(req,res,next) {
     console.log("beep")
@@ -53,7 +52,7 @@ test('test view engine,next middleware call,content type,accept', function(t) {
   })
   app.get('/', function(req,res,next) {
     t.equal(req.headers.accept,'cool/beans')
-    res.render('index', { title: 'Hey', message: 'Hello there!'});
+    res.render('index', { title: 'Hey ' + req.query.from , message: 'Hello there!'});
   })
 
   app.engine('ntl', function (filePath, options, callback) { // define the template engine
@@ -77,10 +76,11 @@ test('test view engine,next middleware call,content type,accept', function(t) {
     t.equal(res.text, 'frank')
   })
   x
-  .get('/')
+  .get('/?from=garen')
   .set('Accept', 'cool/beans')
   .end(function(err,res) {
     t.equal(res.headers['content-type'], 'text/html')
+    t.equal(res.text.match(/<h2>(.+?)<\/h2>/)[1], 'Yo!! Hey garen');
   })
 })
 

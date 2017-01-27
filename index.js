@@ -4,6 +4,7 @@ function Router() {
   this.routes = {};
   this.regexroutes = [];
 
+  this.uselist = [];
   this.fileserver = undefined;
   this.props = {};
   this.engines = {};
