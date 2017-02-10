@@ -26,6 +26,26 @@ Write fully featured http services and streaming templates without the bloat
 * express.static 
 * fs
 
+## How to do a simple GET Fall-Through
+    var http = require('http')
+    var router = require('router-middleware')
+    var ecstatic = require('ecstatic')({root:__dirname })    
+    var app = router();
+    app.fileserver(ecstatic);
+    var server = http.createServer(app)
+  
+    app.get('/admin', function(req,res,next) {
+      if (some_condition) {
+        next(); // will now pass through to the fileserver 
+                // i.e. /admin/index.html or /admin.html
+      } else {
+        res.writeHead(403)
+        res.write('Denied, sorry')
+        res.end()
+      }
+    })    
+ 
+
 ### Example
     var http = require('http')
     var router = require('router-middleware')
