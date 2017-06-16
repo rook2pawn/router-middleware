@@ -1,13 +1,13 @@
 {
   "name": "router-middleware",
   "author": "David Wee <rook2pawn@gmail.com> (http://rook2pawn.com)",
-  "version": "2.1.9",
+  "version": "2.2.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "node test/test*.js"
   },
-  "keywords" : [
+  "keywords": [
     "express",
     "router",
     "tree",
@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/rook2pawn/router-middleware#readme",
   "dependencies": {
+    "concat-stream": "^1.6.0",
     "methods": "^1.1.1"
   },
   "devDependencies": {

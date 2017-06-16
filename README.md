@@ -124,9 +124,24 @@ Example callback:
 Attach a handler to any [HTTP Method](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol#Request_methods) from the [full method verb list](https://github.com/jshttp/methods/ "METHODS")
 Handler has the signature function(req, res, next).
 
+
+### .get
+
     app.get('/user/email',function(req,res,next) {
       res.write('foo@boop.com');
       res.end();
+    })
+  
+### .post
+  
+    // suppose we send JSON payload via POST
+    // { username: 'Manny', species: 'cat' }
+    
+    app.post('/user/email',function(req,res,next) {
+      
+      // req.body will be the JSON parsed object that is sent on the post
+      // req.body.username == 'Manny';
+      // req.body.species == 'cat';
     })
 
 ### .use
