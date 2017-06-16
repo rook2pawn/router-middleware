@@ -1,11 +1,11 @@
 {
   "name": "router-middleware",
   "author": "David Wee <rook2pawn@gmail.com> (http://rook2pawn.com)",
-  "version": "2.2.1",
+  "version": "2.2.2",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node test/test*.js"
+    "test": "tape ./test/test-*.js"
   },
   "keywords": [
     "express",

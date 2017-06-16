@@ -39,17 +39,28 @@ test('test parameterization using uuids and query', function(t) {
   .end(function(err,res) {
     t.equal(res.text, id)
   })
-})
+});
 
-test('test view engine,next middleware call,content type,accept', function(t) {
-  t.plan(4)
+test('content type,accept', function(t) {
   var app = router()
+  t.plan(1);
   app.get('/user/:username',function(req,res,next) {
-    console.log("beep")
     next()
   },function(req,res,next) {
     res.end(req.params.username)
   })
+  var x = request(app);
+  x
+  .get('/user/frank')
+  .set('Accept', 'cool/beans')
+  .end(function(err,res) {
+    t.equal(res.text, 'frank')
+  })
+});
+
+test('test view engine,next middleware call', function(t) {
+  t.plan(3);
+  var app = router()
   app.get('/', function(req,res,next) {
     t.equal(req.headers.accept,'cool/beans')
     res.render('index', { title: 'Hey ' + req.query.from , message: 'Hello there!'});
@@ -70,15 +81,10 @@ test('test view engine,next middleware call,content type,accept', function(t) {
   var x = request(app);
 
   x
-  .get('/user/frank')
-  .set('Accept', 'cool/beans')
-  .end(function(err,res) {
-    t.equal(res.text, 'frank')
-  })
-  x
   .get('/?from=garen')
   .set('Accept', 'cool/beans')
   .end(function(err,res) {
+    console.log("OH")
     t.equal(res.headers['content-type'], 'text/html')
     t.equal(res.text.match(/<h2>(.+?)<\/h2>/)[1], 'Yo!! Hey garen');
   })

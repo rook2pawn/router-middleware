@@ -6,7 +6,7 @@ var fs = require('fs');
 var qs = require('querystring');
 
 
-test.skip('test post', function(t) {
+test('test post', function(t) {
   t.plan(2)
   var app = router()
   app.post('/user',function(req,res) {
