@@ -84,7 +84,6 @@ test('test view engine,next middleware call', function(t) {
   .get('/?from=garen')
   .set('Accept', 'cool/beans')
   .end(function(err,res) {
-    console.log("OH")
     t.equal(res.headers['content-type'], 'text/html')
     t.equal(res.text.match(/<h2>(.+?)<\/h2>/)[1], 'Yo!! Hey garen');
   })
