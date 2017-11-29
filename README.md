@@ -151,9 +151,13 @@ Add a use handler that is placed in front of every call.
     app.use(logger);
     app.use(parser);
 
-### .fileserver
+### .fileserver(yourFileServer)
 
 Attach any fileserver. Any custom routes you set will have precedence. All other unmatched GET requests falls-through to the fileserver.
+
+Example
+
+    app.fileserver(require('ecstatic')({root:__dirname+'/web'}));
 
 ## Accessory methods
 
