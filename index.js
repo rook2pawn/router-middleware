@@ -1,5 +1,5 @@
 const App = require("./lib/app");
-const cs = require("concat-stream");
+const bodyParser = require("./lib/bodyParser");
 
 function Router() {
   if (!(this instanceof Router)) return new Router();
@@ -13,12 +13,5 @@ function Router() {
   return new App(this);
 }
 
-Router.bodyParser = (req, res, next) => {
-  req.pipe(
-    cs(data => {
-      req.body = JSON.parse(data);
-      next();
-    })
-  );
-};
+Router.bodyParser = bodyParser;
 module.exports = exports = Router;
