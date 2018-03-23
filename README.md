@@ -26,6 +26,26 @@ Write fully featured http services and streaming templates without the bloat
 * express.static
 * fs
 
+## How to handle POST (this autodetects json or form querystring)
+
+    var http = require('http')
+    var router = require('router-middleware')
+    var app = router();
+    var server = http.createServer(app)
+
+    // router.bodyParser auto-detects json or querystring and places the result
+    // on the req.body
+
+    app.post('/user/email', router.bodyParser, function(req,res,next) {
+
+      // req.body will be the JSON parsed object that is sent on the post
+      // req.body.username == 'Manny';
+      // req.body.species == 'cat';
+    })
+
+    server.listen(5150);
+
+
 ## How to do a simple GET Fall-Through
     var http = require('http')
     var router = require('router-middleware')
@@ -44,6 +64,7 @@ Write fully featured http services and streaming templates without the bloat
         res.end()
       }
     })
+    server.listen(5150);
 
 
 ### Example
@@ -56,6 +77,8 @@ Write fully featured http services and streaming templates without the bloat
       res.writeHead(200)
       res.end("Hello " + req.params.username + "!")
     })
+
+    server.listen(5150);
 
     // GET /user/joe
     // Hello joe!
