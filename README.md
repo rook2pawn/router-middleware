@@ -4,6 +4,26 @@ Write fully featured http services and streaming templates without the bloat
 
 # router-middleware
 
+## Full Example
+
+    var http = require('http')
+    var router = require('router-middleware')
+    var app = router();
+    var server = http.createServer(app)
+
+    app.post('/user/:userId/email', router.bodyParser, function(req,res,next) {
+
+      console.log(req.query);
+      // { authToken: '1234' }
+      console.log(req.params);
+      // { userId: 'abc123' }
+      console.log(req.body);
+      // { message: 'Hello World!' }
+    })
+
+    server.listen(5150);
+
+    > curl -X POST -d '{"message" : "Hello World!"}' "http://localhost:5150/user/abc123/email?authToken=1234"
 
 ## Supports
 * Legacy Support for Express Template Engines
@@ -25,27 +45,6 @@ Write fully featured http services and streaming templates without the bloat
 * Ecstatic
 * express.static
 * fs
-
-## Full Example
-
-    var http = require('http')
-    var router = require('router-middleware')
-    var app = router();
-    var server = http.createServer(app)
-
-    app.get('/user/:userId/email', router.bodyParser, function(req,res,next) {
-
-      console.log(req.query);
-      // { authToken: '1234' }
-      console.log(req.params);
-      // { userId: 'abc123' }
-    })
-
-    server.listen(5150);
-
-    > curl "http://localhost:5150/user/abc123/email?authToken=1234"
-
-
 
 ## How to handle POST (this autodetects json or form querystring)
 
