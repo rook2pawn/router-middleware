@@ -5,7 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "tape ./test/test-*.js"
+    "test": "tape ./test/test-*.js | tap-spec"
   },
   "keywords": [
     "express",
@@ -32,6 +32,7 @@
   "devDependencies": {
     "response": "^0.18.0",
     "supertest": "^1.0.1",
+    "tap-spec": "^5.0.0",
     "tape": "^4.6.0"
   }
 }
