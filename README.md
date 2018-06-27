@@ -6,6 +6,7 @@ Write fully featured http services and streaming templates without the bloat
 
 ## Full Example
 
+```javascript
     var http = require('http')
     var router = require('router-middleware')
     var app = router();
@@ -22,7 +23,7 @@ Write fully featured http services and streaming templates without the bloat
     })
 
     server.listen(5150);
-
+```
     > curl -X POST -d '{"message" : "Hello World!"}' "http://localhost:5150/user/abc123/email?authToken=1234"
 
 ## Supports
@@ -48,6 +49,7 @@ Write fully featured http services and streaming templates without the bloat
 
 ## How to handle POST (this autodetects json or form querystring)
 
+```javascript
     var http = require('http')
     var router = require('router-middleware')
     var app = router();
@@ -64,9 +66,10 @@ Write fully featured http services and streaming templates without the bloat
     })
 
     server.listen(5150);
-
+```
 
 ## How to do a simple GET Fall-Through
+```javascript
     var http = require('http')
     var router = require('router-middleware')
     var ecstatic = require('ecstatic')({root:__dirname })
@@ -85,9 +88,10 @@ Write fully featured http services and streaming templates without the bloat
       }
     })
     server.listen(5150);
-
+```
 
 ### Example
+```javascript
     var http = require('http')
     var router = require('router-middleware')
     var app = router()
@@ -102,8 +106,10 @@ Write fully featured http services and streaming templates without the bloat
 
     // GET /user/joe
     // Hello joe!
+```
 
 ### With Fileserver Ecstatic
+```javascript
     var http = require('http')
     var router = require('router-middleware')
     var app = router()
@@ -114,8 +120,10 @@ Write fully featured http services and streaming templates without the bloat
 
     // any custom routes you set will have precedence
     // all other GET requests falls-through to the fileserver
+```
 
 ### With Fileserver Express
+```javascript
     var http = require('http')
     var router = require('router-middleware')
     var app = router()
@@ -126,15 +134,18 @@ Write fully featured http services and streaming templates without the bloat
 
     // any custom routes you set will have precedence
     // all other GET requests falls-through to the fileserver
-
+```
 ### With a Express Template Engine
+```javascript
     var router = require('router-middleware')
     var app = router()
     app.engine('view', yourengine) // i.e. index.view
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
+```
 
 ### With a Stream Template Engine
+```javascript
     var router = require('router-middleware')
     var through = require('through')
 
@@ -142,12 +153,13 @@ Write fully featured http services and streaming templates without the bloat
     app.streamengine('view', yourengine)
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine
-
+```
 
 where "yourengine" callback will be called with filepath, options, and the response object.
 
 Example callback:
 
+```javascript
     function (filePath, options, res) { // define the template engine
       fs
       .createReadStream(filePath)
@@ -159,6 +171,7 @@ Example callback:
         }))
       .pipe(res)
     }
+```
 
 ## Main Methods
 
@@ -169,19 +182,19 @@ Handler has the signature function(req, res, next).
 
 
 ### .get
-
+```javascript
     app.get('/user/email',function(req,res,next) {
       res.write('foo@boop.com');
       res.end();
     })
-
+```
 ### .post
 
 This module comes with a POST body consumer that places the POST body on the `req.body` for you. If you want to use this simply add it
 in your middleware stack for a route.
 
 Then you can specify a route like the following:
-
+```javascript
     // suppose we send JSON payload via POST
     // { username: 'Manny', species: 'cat' }
 
@@ -191,40 +204,40 @@ Then you can specify a route like the following:
       // req.body.username == 'Manny';
       // req.body.species == 'cat';
     })
-
+```
 ### .use
 
 Add a use handler that is placed in front of every call.
-
+```javascript
     app.use(logger);
     app.use(parser);
-
+```
 ### .fileserver(yourFileServer)
 
 Attach any fileserver. Any custom routes you set will have precedence. All other unmatched GET requests falls-through to the fileserver.
 
 Example
-
+```javascript
     app.fileserver(require('ecstatic')({root:__dirname+'/web'}));
-
+```
 ## Accessory methods
 
 ### .engine
 
 Use templates with the same signature as express engines.
-
+```javascript
     app.engine('view', yourengine) // i.e. index.view
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
-
+```
 ### .streamengine
-
+```javascript
     app.streamengine('view', your_stream_engine)
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine
-
+```
 #### An Example streamengine
-
+```javascript
     var HtmlTemplate = require('html-template')
     app.streamengine('view', function(filename, opts, res) {
       // looking for {template: <template string name>, list: <list of objects to write> }
@@ -242,9 +255,9 @@ Use templates with the same signature as express engines.
         template.end()
       })
     })
-
+```
 #### Using this example streamengine
-
+```javascript
     res.streamrender('teamslist', [{
       template:'poll',
       list:JSON.parse(fs.readFileSync('poll_ap.json')).map(function(poll) {
@@ -268,7 +281,7 @@ Use templates with the same signature as express engines.
         }
       })
     }]
-
+```
 Where teamslist.view looks like
 
     <table>
@@ -291,10 +304,10 @@ Where teamslist.view looks like
 ### .set
 
 Used to set properties for .engine and .streamengine.
-
+```javascript
     app.set('views', './views'); // specify the views directory
     app.set('view engine', 'view'); // register the template engine (i.e. for extension .view)
-
+```
 
 ### A Tale of Two Servers, Two Stories
 
@@ -313,11 +326,11 @@ How is this done? A router that is purpose-built expressly for
 
 
 To be fair, streaming data webservices over HTTP can be done with something as simple as, and yes, Express is suitable as well for this task.
-
+```javascript
     http.createServer(function(req,res) {
       mystream.pipe(res)
     })
-
+```
 
 
 
@@ -329,7 +342,7 @@ The example here is using the very awesome [html-template](https://npmjs.org/pac
 ### Example
 
 Using [html-template](https://npmjs.org/package/html-template) and [ecstatic](https://npmjs.org/package/estatic)
-
+```javascript
     var router = require('router-middleware')
     var HtmlTemplate = require('html-template')
     var path = require('path')
@@ -353,9 +366,9 @@ Using [html-template](https://npmjs.org/package/html-template) and [ecstatic](ht
       template.end()
     })
     app.fileserver(ecstatic)
-
+```
 And you could invoke it through a route like this
-
+```javascript
     app.get('/', function(req,res) {
       res.streamrender('animal_list', {
         template:'animal',
@@ -374,7 +387,7 @@ And you could invoke it through a route like this
           }
       })
     })
-
+```
 Where the arguments and options of res.streamrender end up going to the user-defined callback at app.streamengine,
 and this would lookup 'views/animal_list.view' whose content was something like
 
