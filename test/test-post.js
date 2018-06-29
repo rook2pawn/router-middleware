@@ -1,4 +1,4 @@
-var request = require("supertest");
+const request = require("supertest-light");
 var test = require("tape");
 var router = require("../index");
 var response = require("response");
@@ -10,15 +10,13 @@ test("test post", function(t) {
   var app = router();
   app.post("/user", router.bodyParser, function(req, res) {
     t.ok(req.body);
+    console.log("req body:", req.body.username)
     res.write(req.body.username);
     res.end();
   });
-  var x = request(app);
-  x
-    .post("/user/")
-    .send({ username: "Manny", species: "cat" })
-    .end(function(err, res) {
-      console.log(res.text);
+  request(app)
+    .post("/user/", { username: "Manny", species: "cat" })
+    .then((res) => {
       t.equal(res.text, "Manny");
     });
 });
@@ -34,11 +32,9 @@ test("test post", function(t) {
     res.write(username.concat(":").concat(message));
     res.end();
   });
-  var x = request(app);
-  x
-    .post("/user/manny/notify")
-    .send({ message: "Hello!" })
-    .end(function(err, res) {
+  request(app)
+    .post("/user/manny/notify",{message:"Hello!"})
+    .then((res) => {
       t.equal(res.text, "manny:Hello!");
     });
 });

@@ -1,4 +1,4 @@
-var request = require("supertest");
+const request = require("supertest-light");
 var test = require("tape");
 var router = require("../index");
 var response = require("response");
@@ -17,8 +17,9 @@ test("test parameterization", function(t) {
   app.get("/foo", function(req, res, next) {
     next();
   });
-  var x = request(app);
-  x.get("/foo").end(function(err, res) {
+  request(app)
+  .get("/foo")
+  .then((res) => {
     t.equals(res.text, "beep", "fileserver delivers the message");
     t.end();
   });

@@ -1,4 +1,6 @@
-var request = require("supertest");
+var http = require("http");
+var concat = require("concat-stream");
+const request = require("supertest-light");
 var test = require("tape");
 var router = require("../index");
 var fs = require("fs");
@@ -15,10 +17,11 @@ test("test use", function(t) {
     res.write("baz");
     res.end();
   });
-  var x = request(app);
-  x.get("/bar").end(function(err, res) {
+  request(app)
+  .get("/bar")
+  .then((res) => {
     t.equal(res.text, "baz");
-  });
+  })
 });
 
 test("test multiple use", function(t) {
@@ -40,8 +43,9 @@ test("test multiple use", function(t) {
     res.write("baz");
     res.end();
   });
-  var x = request(app);
-  x.get("/bar").end(function(err, res) {
+  request(app)
+  .get("/bar")
+  .then((res) => {
     t.equal(res.text, "baz");
-  });
+  })
 });
