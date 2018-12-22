@@ -1,13 +1,12 @@
 const request = require("supertest-light");
-var test = require("tape");
-var router = require("../index");
-var response = require("response");
-var fs = require("fs");
-var qs = require("querystring");
+const test = require("tape");
+const router = require("../index");
+const fs = require("fs");
+const qs = require("querystring");
 
 test("test post", function(t) {
   t.plan(2);
-  var app = router();
+  const app = router();
   app.post("/user", router.bodyParser, function(req, res) {
     t.ok(req.body);
     console.log("req body:", req.body.username)
@@ -23,12 +22,12 @@ test("test post", function(t) {
 
 test("test post", function(t) {
   t.plan(3);
-  var app = router();
+  const app = router();
   app.post("/user/:userId/notify", router.bodyParser, function(req, res) {
     t.ok(req.body.message);
     t.ok(req.params.userId);
-    var username = req.params.userId;
-    var message = req.body.message;
+    const username = req.params.userId;
+    const message = req.body.message;
     res.write(username.concat(":").concat(message));
     res.end();
   });

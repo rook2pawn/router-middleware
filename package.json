@@ -30,7 +30,6 @@
     "methods": "^1.1.1"
   },
   "devDependencies": {
-    "response": "^0.18.0",
     "supertest-light": "^1.0.2",
     "tap-spec": "^5.0.0",
     "tape": "^4.6.0"

@@ -1,10 +1,10 @@
-var http = require("http");
-var concat = require("concat-stream");
+const http = require("http");
+const concat = require("concat-stream");
 const request = require("supertest-light");
-var test = require("tape");
-var router = require("../index");
-var fs = require("fs");
-var qs = require("querystring");
+const test = require("tape");
+const router = require("../index");
+const fs = require("fs");
+const qs = require("querystring");
 
 test("test use", function(t) {
   t.plan(2);

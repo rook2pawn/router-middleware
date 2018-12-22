@@ -1,13 +1,12 @@
 const request = require("supertest-light");
-var test = require("tape");
-var router = require("../index");
-var response = require("response");
-var fs = require("fs");
-var qs = require("querystring");
+const test = require("tape");
+const router = require("../index");
+const fs = require("fs");
+const qs = require("querystring");
 
 test("test parameterization", function(t) {
   t.plan(2);
-  var app = router();
+  const app = router();
   app.get("/user/:username/:postnumber", function(req, res) {
     t.equal(req.params.postnumber, "341");
     res.write(req.params.username);
@@ -21,8 +20,8 @@ test("test parameterization", function(t) {
 });
 test("test parameterization using uuids and query", function(t) {
   t.plan(2);
-  var qobj = { foo: "bar", life: "42" };
-  var app = router();
+  const qobj = { foo: "bar", life: "42" };
+  const app = router();
   app.get("/user/:id", function(req, res) {
     console.log(req.params);
     console.log(req.query);
@@ -30,7 +29,7 @@ test("test parameterization using uuids and query", function(t) {
     res.write(req.params.id);
     res.end();
   });
-  var id = "0efa7810-5a6e-4427-9b32-63c9102bbfe";
+  const id = "0efa7810-5a6e-4427-9b32-63c9102bbfe";
   request(app)
   .get(
       "/user/"
@@ -44,7 +43,7 @@ test("test parameterization using uuids and query", function(t) {
 });
 
 test("content type,accept", function(t) {
-  var app = router();
+  const app = router();
   t.plan(1);
   app.get(
     "/user/:username",
@@ -65,7 +64,7 @@ test("content type,accept", function(t) {
 
 test("test view engine,next middleware call", function(t) {
   t.plan(3);
-  var app = router();
+  const app = router();
   app.get("/", function(req, res, next) {
     t.equal(req.headers.accept, "cool/beans");
     res.render("index", { title: "Hey " + req.query.from, message: "Hello there!" });
@@ -76,7 +75,7 @@ test("test view engine,next middleware call", function(t) {
     fs.readFile(filePath, function(err, content) {
       if (err) return callback(new Error(err));
       // this is an extremely simple template engine
-      var rendered = content
+      const rendered = content
         .toString()
         .replace("#title#", "" + options.title + "")
         .replace("#message#", "" + options.message + "");
@@ -86,7 +85,7 @@ test("test view engine,next middleware call", function(t) {
   app.set("views", "./views"); // specify the views directory
   app.set("view engine", "ntl"); // register the template engine
 
-  var x = request(app)
+  const x = request(app)
   .set("Accept", "cool/beans")
     .get("/?from=garen")
     .then((res) => {
