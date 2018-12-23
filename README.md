@@ -2,6 +2,8 @@ Write fully featured http services and streaming templates without the bloat
 
 [![Build Status](https://travis-ci.org/rook2pawn/router-middleware.svg?branch=master)](https://travis-ci.org/rook2pawn/router-middleware)
 
+[![Coverage Status](https://coveralls.io/repos/github/rook2pawn/router-middleware/badge.svg?branch=master)](https://coveralls.io/github/rook2pawn/router-middleware?branch=master)
+
 # router-middleware
 
 ## Full Example
