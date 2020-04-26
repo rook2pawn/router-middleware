@@ -10,12 +10,7 @@
   },
   "keywords": [
     "express",
-    "router",
-    "tree",
-    "tree router",
-    "stream",
-    "streaming template",
-    "stream template"
+    "router"
   ],
   "repository": {
     "type": "git",
