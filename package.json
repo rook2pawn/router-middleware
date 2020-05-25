@@ -5,7 +5,7 @@
   "description": "Super lightweight express style router",
   "main": "index.js",
   "scripts": {
-    "coverage": "npm test && nyc report --reporter=text-lcov | coveralls",
+    "coverage": "npm test && nyc report --reporter=text-lcov | coveralls --verbose",
     "test": "nyc tape ./test/test-*.js | tap-spec"
   },
   "keywords": [
