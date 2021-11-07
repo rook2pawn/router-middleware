@@ -1,4 +1,4 @@
-Write fully featured http services and streaming templates without the bloat
+Write fully featured http services without the bloat. Compatible with Express Middleware.
 
 [![Build Status](https://travis-ci.org/rook2pawn/router-middleware.svg?branch=master)](https://travis-ci.org/rook2pawn/router-middleware)
 
@@ -6,13 +6,25 @@ Write fully featured http services and streaming templates without the bloat
 
 # router-middleware
 
+## Compatible with Express Middleware
+
+### with cookie-parser
+
+```javascript
+const rm = require("router-middleware");
+const app = rm();
+const cookieParser = require("cookie-parser");
+
+app.use(cookieParser()); // cookies now on req.cookies
+```
+
 ## Full Example
 
 ```javascript
-var http = require("http");
-var router = require("router-middleware");
-var app = router();
-var server = http.createServer(app);
+const http = require("http");
+const rm = require("router-middleware");
+const app = rm();
+const server = http.createServer(app);
 
 app.post("/user/:userId/email", router.bodyParser, function (req, res, next) {
   console.log("Query:", req.query);
