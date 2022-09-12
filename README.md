@@ -16,6 +16,7 @@ const app = rm();
 const cookieParser = require("cookie-parser");
 
 app.use(cookieParser()); // cookies now on req.cookies
+app.use(rm.bodyParser); // post data now on req.body
 ```
 
 ## Full Example
