@@ -16,7 +16,6 @@ const app = rm();
 const cookieParser = require("cookie-parser");
 
 app.use(cookieParser()); // cookies now on req.cookies
-app.use(rm.bodyParser); // post data now on req.body
 ```
 
 ## Full Example
@@ -61,10 +60,7 @@ var router = require("router-middleware");
 var app = router();
 var server = http.createServer(app);
 
-// router.bodyParser auto-detects json or querystring and places the result
-// on the req.body
-
-app.post("/user/email", router.bodyParser, function (req, res, next) {
+app.post("/user/email", function (req, res, next) {
   // Now req.body will be populated with the body posted.
   // req.body.username == 'Manny';
   // req.body.species == 'cat';
@@ -163,16 +159,13 @@ app.get("/user/email", function (req, res, next) {
 
 ### .post
 
-This module comes with a POST body consumer that places the POST body on the `req.body` for you. If you want to use this simply add it
-in your middleware stack for a route.
-
-Then you can specify a route like the following:
+This module comes with a POST body consumer that places the POST body on the `req.body` for you.
 
 ```javascript
 // suppose we send JSON payload via POST
 // { username: 'Manny', species: 'cat' }
 
-app.post("/user/email", router.bodyParser, function (req, res, next) {
+app.post("/user/email", function (req, res, next) {
   // req.body will be the JSON parsed object that is sent on the post
   // req.body.username == 'Manny';
   // req.body.species == 'cat';
@@ -209,7 +202,7 @@ app.set("<key>", "<value>"); // specify the views directory
 ### License
 
 The MIT License (MIT)
-Copyright (c) 2020 David Wee - rook2pawn@gmail.com
+Copyright (c) 2024 David Wee - rook2pawn@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

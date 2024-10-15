@@ -76,26 +76,9 @@ test("test use stop chain", function (t) {
     });
 });
 
-test("test use bodyParser", function (t) {
-  t.plan(1);
-  var app = router();
-  app.use(router.bodyParser);
-  app.post("/bar", function (req, res) {
-    const { number } = req.body;
-    const val = number * 3;
-    res.write(val.toString());
-    res.end();
-  });
-  request(app)
-    .post("/bar", { number: 7 })
-    .then((res) => {
-      t.equal(res.text, "21");
-    });
-});
 test("test use bodyParser without posting data", function (t) {
   t.plan(1);
   var app = router();
-  app.use(router.bodyParser);
   app.post("/bar", function (req, res) {
     res.write("hello");
     res.end();

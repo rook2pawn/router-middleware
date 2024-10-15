@@ -1,10 +1,7 @@
 const App = require("./lib/app");
-const bodyParser = require("./lib/bodyParser");
-const firewall = require("./lib/firewall");
 
-const Router = () => {
-  return new App();
+const Router = ({ bodyParser = true, cors = true } = {}) => {
+  return new App({ bodyParser, cors });
 };
 
-Router.bodyParser = bodyParser;
 module.exports = exports = Router;
