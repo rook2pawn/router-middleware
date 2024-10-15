@@ -26,7 +26,7 @@ const rm = require("router-middleware");
 const app = rm();
 const server = http.createServer(app);
 
-app.post("/user/:userId/email", router.bodyParser, function (req, res, next) {
+app.post("/user/:userId/email", function (req, res, next) {
   console.log("Query:", req.query);
   // { authToken: '1234' }
   console.log("Params:", req.params);
