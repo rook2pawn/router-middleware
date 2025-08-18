@@ -5,7 +5,7 @@
   "description": "Super lightweight express style router",
   "main": "index.js",
   "scripts": {
-    "test": "tape ./test/test-*.js | tap-spec"
+    "test": "tape ./test/test-*.js"
   },
   "keywords": [
     "express",
@@ -22,14 +22,10 @@
   "homepage": "https://github.com/rook2pawn/router-middleware#readme",
   "dependencies": {
     "concat-stream": "^1.6.0",
-    "methods": "^1.1.1",
-    "minimist": ">=1.2.3",
-    "path-parse": ">=1.0.7",
-    "trim": ">=0.0.3"
+    "methods": "^1.1.1"
   },
   "devDependencies": {
-    "supertest-light": "^1.0.2",
-    "tap-spec": "^5.0.0",
+    "supertest-light": "",
     "tape": "^4.6.0"
   }
 }

@@ -13,9 +13,6 @@ Write fully featured http services without the bloat. Compatible with Express Mi
 ```javascript
 const rm = require("router-middleware");
 const app = rm();
-const cookieParser = require("cookie-parser");
-
-app.use(cookieParser()); // cookies now on req.cookies
 ```
 
 ## Full Example
@@ -52,7 +49,7 @@ server.listen(5150);
 - express.static
 - fs
 
-## How to handle POST (this autodetects json or form querystring)
+## How to handle POST
 
 ```javascript
 var http = require("http");
@@ -62,8 +59,7 @@ var server = http.createServer(app);
 
 app.post("/user/email", function (req, res, next) {
   // Now req.body will be populated with the body posted.
-  // req.body.username == 'Manny';
-  // req.body.species == 'cat';
+  // i.e. req.body.username == 'Ben';
 });
 
 server.listen(5150);
@@ -202,7 +198,7 @@ app.set("<key>", "<value>"); // specify the views directory
 ### License
 
 The MIT License (MIT)
-Copyright (c) 2024 David Wee - rook2pawn@gmail.com
+Copyright (c) 2025 David Wee - rook2pawn@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
