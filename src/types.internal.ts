@@ -12,3 +12,6 @@ export type ImplErrorHandler = (
   res: Response<any>,
   next: Next
 ) => any;
+
+// Partial bits of Node's IncomingMessage we use internally
+export type NodeReqBits = { url?: string; method?: string; path?: string };

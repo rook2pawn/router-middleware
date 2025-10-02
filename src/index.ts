@@ -8,7 +8,12 @@ import type {
   AnyParams,
 } from "./types.js";
 import { wrap } from "./error.js";
-import type { ImplHandler, ImplErrorHandler } from "./types.internal.js";
+import type {
+  NodeReqBits,
+  ImplHandler,
+  ImplErrorHandler,
+} from "./types.internal.js";
+import { parseQueryFromURL } from "./query.js";
 import {
   createRouteTables,
   addRoute,
@@ -25,7 +30,6 @@ function augmentRes(res: any) {
   if (res.statusCode == null) res.statusCode = 200;
 
   res.status ??= (code: number) => {
-    console.log("setting status", code);
     res.statusCode = code;
     return res;
   };
@@ -114,7 +118,10 @@ export function createApp(): App {
   let fileserver: ImplHandler | null = null;
 
   //  const app = {} as App;
-  const app = ((req: Request<any, AnyParams>, res: Response<unknown>) => {
+  const app = ((
+    req: Request<any, AnyParams> & NodeReqBits,
+    res: Response<unknown>
+  ) => {
     (app as any).handle(req, res);
   }) as unknown as App;
 
@@ -150,9 +157,10 @@ export function createApp(): App {
 
   // ---- dispatcher ----
   (app as any).handle = (
-    req: Request<any, AnyParams>,
+    req: Request<any, AnyParams> & NodeReqBits,
     res: Response<unknown>
   ) => {
+    (req as any).query = parseQueryFromURL(req.url || "/");
     // add response helpers
     augmentRes(res);
 

@@ -124,13 +124,24 @@ node test.mjs
 # supports generic type handlers
 
 ```ts
-// Param inference from path:
-app.get("/teams/:teamId/members/:memberId", (req, res) => {
-  // req.params.teamId: string
-  // req.params.memberId: string
-  res.json(req.params);
-});
+// GET handler typed as <Path, RB=string, RO=object>
+app.get<"/echo", string, { text: string; length: number }>(
+  "/echo",
+  (req, res) => {
+    const text = req.query?.q ?? ""; //    string
+    res.send({ text, length: s.length });
+  }
+);
+```
 
+```
+curl -i "http://127.0.0.1:3000/echo?q=bart"
+# returns { text: bart, length: 4 }
+```
+
+## More examples of strongly typed handlers
+
+```ts
 // Strongly typed Response body:
 app.get<"/ping", unknown, { ok: true }>("/ping", (_req, res) => {
   // res.send enforces { ok: true }
@@ -146,6 +157,16 @@ app.post<"/user/:id/email", Q, B, R>("/user/:id/email", (req, res) => {
   // req.query.search?: string
   // req.body.email: string
   res.status(201).send({ ok: true });
+});
+```
+
+# Param inference from path
+
+```ts
+app.get("/teams/:teamId/members/:memberId", (req, res) => {
+  // req.params.teamId: string
+  // req.params.memberId: string
+  res.json(req.params);
 });
 ```
 
