@@ -50,6 +50,42 @@ curl -X POST -H "content-type: application/json" \
   "http://localhost:5150/user/abc123/email"
 ```
 
+# primary usage patterns and rules
+
+### usage patterns
+
+```ts
+// OK JSON
+res.status(201).json({ id: "abc123" });
+
+// Plain text
+res.set("Content-Type", "text/plain; charset=utf-8").send("ok");
+
+// Empty body (204 No Content)
+res.status(204).end();
+
+// 405 with Allow
+res.set("Allow", "GET, POST").status(405).end();
+
+// Error
+res.status(400).json({ error: "Bad request" });
+```
+
+### rules
+
+- `res.send(body)` or `res.json(body)` when you have a body, `res.end()` when you don't.
+- Default HTTP status is 200
+- Three exit helpers: `res.json(value)` and `res.send(body)` and `res.end()` where `.end()` accepts no body
+- res.set(name, value) is chainable and sets headers before send.
+- res.status(code) is chainable.
+- res.json always sets Content-Type: application/json; charset=utf-8.
+
+### res.send() rules
+
+- Res.send rule 1: Objects are delegated to JSON
+- Res.send rule 2: string/buffer -> Write as-is
+- Res.send rule 3: undefined -> Empty body
+
 # why this over Express?
 
 - Express-like DX: app.use, app.get/post, (req,res,next) handlers, works with most Express middleware.
@@ -71,12 +107,19 @@ curl -X POST -H "content-type: application/json" \
 - res.set(name, value) → chainable
 - res.json(obj) → sets JSON content-type
 - res.send(body) → Buffer/string/object (objects → JSON)
+- res.end() → No body end (such as OPTIONS 204)
 
 ## HTTP niceties:
 
 - HEAD auto-handled for matching GET
 - OPTIONS returns Allow for the route
 - 405 Method Not Allowed with Allow header
+
+# try it out right away
+
+```
+node test.mjs
+```
 
 # supports generic type handlers
 

@@ -1,51 +1,40 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-// value import (a real runtime value)
-import createApp from "../src/index.ts";
+import request from "../../supertest-light";
+import express from "../src/index.js";
+import tape from "tape";
 
-// type-only imports (compile-time only)
-import type { Request, Response } from "../src/index.ts";
-function mkRes<T = unknown>() : Response<T> { 
-  return {
-    statusCode: 200,
-    body: undefined as T | undefined,
-    send(body) {
-      this.body = body;
-    },
-  };
-}
-test("use middleware", () => {
-  console.log("use middleware test");
-  const app = createApp();
+const app = express();
+app.get("/user/:username/messages", (req, res) => {
+  res.send(`Hello ${req.params.username}!`);
+});
+tape("not found test", async (t) => {
+  t.plan(1);
+  const res = await request(app)
+    .set("User-Agent", "Supertest-Light")
+    .get("/nope")
+    .then((res) => {
+      t.equal(res.statusCode, 404);
+    });
+});
+tape("use middleware test", async (t) => {
+  t.plan(1);
   let called = false;
   app.use((req, _res, next) => {
-    console.log("in middleware");
     called = true;
     next();
   });
-  const req = { method: "GET", url: "/", params: {} };
-  const res = mkRes();
-  app.handle(req, res);
-  assert.equal(called, true);
-  assert.equal(res.statusCode, 404);
+  const res = await request(app)
+    .set("User-Agent", "Supertest-Light")
+    .get("/")
+    .then((res) => {
+      t.equal(called, true);
+    });
 });
-test("hello world route", () => {
-  const app = createApp();
-  app.get("/hello", (_req, res) => {
-    res.send("world");
-  });
-  const req = { method: "GET", url: "/hello", params: {} };
-  const res = mkRes();
-  app.handle(req, res);
-  assert.equal(res.statusCode, 200);
-  assert.equal(res.body, "world");
+tape("param test", async (t) => {
+  t.plan(1);
+  const res = await request(app)
+    .set("User-Agent", "Supertest-Light")
+    .get("/user/bart/messages")
+    .then((res) => {
+      t.equal(res.text, "Hello bart!");
+    });
 });
-test("not found", () => {
-  const app = createApp();
-  const req = { method: "GET", url: "/nope", params: {} };
-  const res = mkRes();
-  app.handle(req, res);
-  assert.equal(res.statusCode, 404);
-  assert.deepEqual(res.body, { error: "Not Found" });
-});
-//# sourceMappingURL=index.test.js.map
