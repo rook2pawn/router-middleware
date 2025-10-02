@@ -244,10 +244,6 @@ export function createApp(): App {
       };
       nextErr(err);
     };
-    type _SendType = typeof res.send;
-    type _ResType = typeof res;
-    // Hover these in your editor; you'll likely see _SendType is `() => void`
-
     // error 404
     const finalizeNotFound = () => {
       res.status(404).json({ error: "Not Found" });
