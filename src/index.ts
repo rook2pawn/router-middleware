@@ -23,6 +23,7 @@ import {
   type RouteTables,
   type MethodMap,
 } from "./method-table.js";
+import { jsonParser } from "./bodyParser.js";
 
 function augmentRes(res: any) {
   // Keep original end
@@ -140,6 +141,9 @@ export function createApp(): App {
     fileserver = asImpl(fs as any);
     return app;
   };
+
+  // body parser
+  (app as any).json = jsonParser;
 
   // verbs -> register via method-table
   function addVerb(method: Method) {

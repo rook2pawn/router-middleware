@@ -206,14 +206,25 @@ app.use((err, req, res, _next) => {
 
 # body parser
 
-Body parsing (defaults & limits)
+```ts
+// global
+app.use(rm.json({ limit: "1mb" }));
+// or per route
+app.post("/ingest/trade", rm.json({ limit: "256kb", keepRaw: true }), handler);
+```
 
-- JSON only by default.
-- Rejects unsupported content types with 415.
-- Enforces a default size limit (1 MB) with 413.
-- Malformed JSON returns 400.
+## body parser options
 
-You can change limits/types when creating the app if you expose those options in your setup (e.g., rm({ body: { limitBytes, types } })).
+```ts
+type ByteLimit = number | `${number}${"b" | "kb" | "mb" | "gb"}`;
+interface JsonOptions {
+  limit?: ByteLimit; // default '1mb'
+  type?: string | RegExp; // default /application\/json/i
+  strict?: boolean; // reject primitives if true (default false)
+  keepRaw?: boolean; // attach req.rawBody as Buffer
+  onError?: (err: Error, req: any, res: any, next: any) => void; // custom error
+}
+```
 
 # License
 
