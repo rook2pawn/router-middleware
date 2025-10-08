@@ -73,18 +73,13 @@ res.status(400).json({ error: "Bad request" });
 
 ### rules
 
-- `res.send(body)` or `res.json(body)` when you have a body, `res.end()` when you don't.
+- `res.send(body)` for string or buffers
+- `res.json(object)` for objects
+- `res.end()` for neither
 - Default HTTP status is 200
-- Three exit helpers: `res.json(value)` and `res.send(body)` and `res.end()` where `.end()` accepts no body
 - res.set(name, value) is chainable and sets headers before send.
 - res.status(code) is chainable.
 - res.json always sets Content-Type: application/json; charset=utf-8.
-
-### res.send() rules
-
-- Res.send rule 1: Objects are delegated to JSON
-- Res.send rule 2: string/buffer -> Write as-is
-- Res.send rule 3: undefined -> Empty body
 
 # why this over Express?
 
@@ -106,7 +101,7 @@ res.status(400).json({ error: "Bad request" });
 - res.status(code) → chainable
 - res.set(name, value) → chainable
 - res.json(obj) → sets JSON content-type
-- res.send(body) → Buffer/string/object (objects → JSON)
+- res.send(body) → Buffer/string
 - res.end() → No body end (such as OPTIONS 204)
 
 ## HTTP niceties:
@@ -129,7 +124,7 @@ app.get<"/echo", string, { text: string; length: number }>(
   "/echo",
   (req, res) => {
     const text = req.query?.q ?? ""; //    string
-    res.send({ text, length: s.length });
+    res.json({ text, length: s.length });
   }
 );
 ```
@@ -145,7 +140,7 @@ curl -i "http://127.0.0.1:3000/echo?q=bart"
 // Strongly typed Response body:
 app.get<"/ping", unknown, { ok: true }>("/ping", (_req, res) => {
   // res.send enforces { ok: true }
-  res.send({ ok: true });
+  res.json({ ok: true });
 });
 
 // If you want typed queries/bodies:
@@ -156,7 +151,7 @@ type R = { ok: true };
 app.post<"/user/:id/email", Q, B, R>("/user/:id/email", (req, res) => {
   // req.query.search?: string
   // req.body.email: string
-  res.status(201).send({ ok: true });
+  res.status(201).json({ ok: true });
 });
 ```
 

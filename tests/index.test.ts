@@ -1,25 +1,22 @@
 import request from "supertest-light";
-import express from "../src/index.js";
+import rm from "../src/index.js";
 import tape from "tape";
 
-const app = express();
-app.get("/user/:username/messages", (req, res) => {
-  res.send(`Hello ${req.params.username}!`);
-});
-function first(v?: string | string[]): string {
-  return Array.isArray(v) ? v[0] ?? "" : v ?? "";
-}
-
-// GET handler typed as <Path, RB=string, RO=object>
-app.get<"/echo", string, { upper: string; length: number }>(
-  "/echo",
-  (req, res) => {
-    const s = req.query?.q ?? ""; //    string
-    res.send({ upper: first(s).toUpperCase(), length: s.length });
-  }
-);
-
 tape("GET /echo — string in, JSON out", async (t) => {
+  const app = rm();
+  function first(v?: string | string[]): string {
+    return Array.isArray(v) ? v[0] ?? "" : v ?? "";
+  }
+
+  // GET handler typed as <Path, RB=string, RO=object>
+  app.get<"/echo", string, { upper: string; length: number }>(
+    "/echo",
+    (req, res) => {
+      const s = req.query?.q ?? ""; //    string
+      res.json({ upper: first(s).toUpperCase(), length: s.length });
+    }
+  );
+
   const r = await request(app)
     .get("/echo?q=hello")
     .then((r) => r);
@@ -30,6 +27,8 @@ tape("GET /echo — string in, JSON out", async (t) => {
 });
 
 tape("not found test", async (t) => {
+  const app = rm();
+
   t.plan(1);
   const res = await request(app)
     .set("User-Agent", "Supertest-Light")
@@ -40,19 +39,49 @@ tape("not found test", async (t) => {
 });
 tape("use middleware test", async (t) => {
   t.plan(1);
+  const app = rm();
+  app.get("/health", (_req, res) => {
+    res.send("ok");
+  });
+
   let called = false;
-  app.use((req, _res, next) => {
+  app.use((_req, _res, next) => {
+    console.log("in use middleware");
     called = true;
     next();
   });
   const res = await request(app)
     .set("User-Agent", "Supertest-Light")
-    .get("/")
-    .then((res) => {
+    .get("/health")
+    .then((_res) => {
+      t.equal(called, true);
+    });
+});
+tape("404 still uses middleware test", async (t) => {
+  // this test to be updated once path specific middleware is added
+  const app = rm();
+
+  t.plan(1);
+  let called = false;
+  app.use((_req, _res, next) => {
+    console.log("in use middleware");
+    called = true;
+    next();
+  });
+  const res = await request(app)
+    .set("User-Agent", "Supertest-Light")
+    .get("/foobar")
+    .then((_res) => {
       t.equal(called, true);
     });
 });
 tape("param test", async (t) => {
+  const app = rm();
+
+  app.get("/user/:username/messages", (req, res) => {
+    res.send(`Hello ${req.params.username}!`);
+  });
+
   t.plan(1);
   const res = await request(app)
     .set("User-Agent", "Supertest-Light")

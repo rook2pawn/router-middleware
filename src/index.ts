@@ -1,87 +1,66 @@
 // src/index.ts
 import type {
+  RequestListener,
+  IncomingMessage,
+  ServerResponse,
+} from "node:http";
+import type {
   App,
   Handler,
-  ErrorHandler,
-  Request,
-  Response,
   AnyParams,
+  Response,
+  Request,
+  ErrorHandler,
 } from "./types.js";
-import { wrap } from "./error.js";
-import type {
-  NodeReqBits,
-  ImplHandler,
-  ImplErrorHandler,
-} from "./types.internal.js";
 import { parseQueryFromURL } from "./query.js";
-import {
-  createRouteTables,
-  addRoute,
-  getRoute,
-  allowedMethods,
-  type Method,
-  type RouteTables,
-  type MethodMap,
-} from "./method-table.js";
-import { jsonParser } from "./bodyParser.js";
 
-function augmentRes(res: any) {
-  // Keep original end
-  if (!res._rm_end && res.end) res._rm_end = res.end.bind(res);
-  if (res.statusCode == null) res.statusCode = 200;
+/* ---------- types ---------- */
+type JsonRes = Response<Record<string, unknown>>;
 
-  res.status ??= (code: number) => {
-    res.statusCode = code;
-    return res;
-  };
+type Method = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+type ImplHandler = (
+  req: any,
+  res: any,
+  next: (err?: any) => void
+) => void | Promise<void>;
+type ImplErrorHandler = (
+  err: any,
+  req: any,
+  res: any,
+  next: (err?: any) => void
+) => void | Promise<void>;
+type RouteEntry = { pattern: string; chain: ImplHandler[] };
+type MethodMap = Map<string, RouteEntry[]>; // method -> list of (pattern, chain)
+type NodeReqBits = {}; // internal additions if you want
 
-  res.set ??= (k: string, v: string) => {
-    res.setHeader?.(k, v);
-    return res;
-  };
-
-  res.json ??= (obj: unknown) => {
-    if (!res.getHeader?.("Content-Type")) {
-      res.setHeader?.("Content-Type", "application/json; charset=utf-8");
-    }
-    const payload = obj === undefined ? "" : JSON.stringify(obj);
-    res._rm_end?.(payload);
-  };
-
-  res.send ??= (body: unknown) => {
-    if (
-      body !== null &&
-      typeof body === "object" &&
-      !Buffer?.isBuffer?.(body)
-    ) {
-      return res.json(body);
-    }
-    res._rm_end?.(body as any);
-  };
-
-  res.end ??= () => {
-    res._rm_end?.();
-  };
-
-  return res;
-}
-
-// ---- tiny stateless helpers ----
+/* ---------- tiny helpers ---------- */
 function isErrMw(fn: Function) {
   return fn.length === 4;
 }
-
-// erase + async-safe at the boundary
 function asImpl(h: Handler<any, any, any>): ImplHandler {
-  return (req, res, next) => wrap(h as any)(req, res, next);
+  return (req, res, next) => {
+    try {
+      const maybe = (h as any)(req, res, next);
+      if (maybe && typeof maybe.then === "function")
+        (maybe as Promise<void>).catch(next);
+    } catch (e) {
+      next(e);
+    }
+  };
 }
 function asImplErr(h: ErrorHandler<any, any, any>): ImplErrorHandler {
-  const runner = (err: any, req: any, res: any, next: any) =>
-    (h as any)(err, req, res, next);
-  return (err, req, res, next) => wrap(runner)(err, req, res, next);
+  return (err, req, res, next) => {
+    try {
+      const maybe = (h as any)(err, req, res, next);
+      if (maybe && typeof maybe.then === "function")
+        (maybe as Promise<void>).catch(next);
+    } catch (e) {
+      next(e);
+    }
+  };
 }
 
-// param matcher: compares a stored pattern (e.g. "/u/:id") to a URL path
+/** Compare a stored pattern (e.g. "/u/:id" or "/u/:id?") with a URL path, returning params or null */
 function extractParams(
   pattern: string,
   urlPath: string
@@ -106,79 +85,118 @@ function extractParams(
       } catch {
         out[name] = u;
       }
-    } else if (p !== u) return null;
+    } else if (p !== u) {
+      return null;
+    }
   }
   return out;
 }
 
-export function createApp(): App {
-  // ---- per-instance state ----
-  const routes: RouteTables = createRouteTables(); // method -> (pattern -> chain)
+/** Compute Allow header for the current URL by checking which methods have a matching pattern */
+function allowedMethods(routes: MethodMap, url: string): Method[] {
+  const allow: Method[] = [];
+  (
+    ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"] as Method[]
+  ).forEach((m) => {
+    const table = routes.get(m);
+    if (!table) return;
+    for (const { pattern } of table) {
+      if (extractParams(pattern, url)) {
+        allow.push(m);
+        break;
+      }
+    }
+  });
+  // RFC says GET implies HEAD is allowed if GET exists; we include HEAD explicitly anyway
+  return Array.from(new Set(allow));
+}
+
+/* ---------- response augmentation (safe) ---------- */
+function augmentRes<T>(res: Response<T>): Response<T> {
+  const anyRes = res as any;
+
+  // Preserve original end so helpers can call it
+  if (!anyRes._rm_end && anyRes.end) anyRes._rm_end = anyRes.end.bind(anyRes);
+  if (anyRes.statusCode == null) anyRes.statusCode = 200;
+
+  anyRes.status ??= ((code: number) => {
+    anyRes.statusCode = code;
+    return res;
+  }) as Response<T>["status"];
+
+  anyRes.set ??= ((name: string, value: string) => {
+    anyRes.setHeader?.(name, value);
+    return res;
+  }) as Response<T>["set"];
+
+  anyRes.json ??= ((obj: T) => {
+    if (!anyRes.getHeader?.("Content-Type")) {
+      anyRes.setHeader?.("Content-Type", "application/json; charset=utf-8");
+    }
+    const payload = obj === undefined ? "" : JSON.stringify(obj as any);
+    (anyRes._rm_end ?? anyRes.end).call(anyRes, payload);
+  }) as Response<T>["json"];
+
+  anyRes.send ??= ((body: unknown) => {
+    if (
+      body !== null &&
+      typeof body === "object" &&
+      !Buffer?.isBuffer?.(body) &&
+      !(body instanceof Uint8Array)
+    ) {
+      return anyRes.json(body);
+    }
+    if (
+      typeof body === "string" ||
+      Buffer?.isBuffer?.(body) ||
+      body instanceof Uint8Array
+    ) {
+      if (!anyRes.getHeader?.("Content-Type")) {
+        anyRes.setHeader?.("Content-Type", "text/plain; charset=utf-8");
+      }
+      anyRes._rm_end?.(body as any);
+    } else {
+      // fall back to JSON for non-string-ish values
+      anyRes.json?.(body);
+    }
+  }) as Response<T>["send"];
+
+  // Provide a no-arg end that defers to original
+  anyRes.end = anyRes.end ?? ((() => anyRes._rm_end?.()) as Response<T>["end"]);
+
+  return res;
+}
+
+/* ---------- app factory ---------- */
+export default function createApp(): App {
+  const routes: MethodMap = new Map(); // method -> [{pattern, chain}]
   const middlewares: ImplHandler[] = [];
   const errorMiddlewares: ImplErrorHandler[] = [];
   let fileserver: ImplHandler | null = null;
 
-  //  const app = {} as App;
-  const app = ((
-    req: Request<any, AnyParams> & NodeReqBits,
-    res: Response<unknown>
-  ) => {
-    (app as any).handle(req, res);
-  }) as unknown as App;
+  const handle: RequestListener<
+    typeof IncomingMessage,
+    typeof ServerResponse
+  > = (req, res) => {
+    const reqX = req as Request<any, AnyParams> & NodeReqBits;
+    const resX = res as Response<any>;
 
-  // use() overload impl
-  (app as any).use = (first: any, ...rest: any[]) => {
-    if (isErrMw(first)) {
-      errorMiddlewares.push(asImplErr(first));
-    } else {
-      middlewares.push(...([first, ...rest] as Handler[]).map(asImpl));
-    }
-    return app;
-  };
+    // augment request/response
+    (reqX as any).query = parseQueryFromURL(req.url ?? "/");
+    augmentRes(resX);
 
-  // fileserver (GET/HEAD fallthrough only)
-  (app as any).fileserver = (fs: Function) => {
-    fileserver = asImpl(fs as any);
-    return app;
-  };
+    const method = (req.method as Method) ?? "GET";
+    const url = req.url ?? "/";
 
-  // body parser
-  (app as any).json = jsonParser;
-
-  // verbs -> register via method-table
-  function addVerb(method: Method) {
-    (app as any)[method.toLowerCase()] = (
-      path: string,
-      ...handlers: Handler[]
-    ) => {
-      addRoute(routes, method, path, handlers.map(asImpl));
-      return app;
-    };
-  }
-  (
-    ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"] as const
-  ).forEach(addVerb);
-
-  // ---- dispatcher ----
-  (app as any).handle = (
-    req: Request<any, AnyParams> & NodeReqBits,
-    res: Response<unknown>
-  ) => {
-    (req as any).query = parseQueryFromURL(req.url || "/");
-    // add response helpers
-    augmentRes(res);
-
-    const method = (req as any).method as Method | string;
-    const url = (req as any).url ?? (req as any).path ?? "/";
-
-    // Find the method's table, then scan patterns to find a match
-    const table: MethodMap | undefined = routes.get(method as Method);
+    // Find matching chain + params under method
+    const methodTable = routes.get(method);
     let matchedChain: ImplHandler[] = [];
     let matchedParams: Record<string, string> | null = null;
     let matchedPattern: string | null = null;
 
-    if (table) {
-      for (const [pattern, chain] of table) {
+    const scanTable = (table?: RouteEntry[]) => {
+      if (!table) return;
+      for (const { pattern, chain } of table) {
         const p = extractParams(pattern, url);
         if (p) {
           matchedChain = chain;
@@ -187,64 +205,34 @@ export function createApp(): App {
           break;
         }
       }
-    }
+    };
 
-    // HEAD inherits GET chain if no explicit HEAD
+    scanTable(methodTable);
+
+    // HEAD inherits GET if no explicit HEAD
     if (!matchedChain.length && method === "HEAD") {
-      const getTable = routes.get("GET");
-      if (getTable) {
-        for (const [pattern, chain] of getTable) {
-          const p = extractParams(pattern, url);
-          if (p) {
-            matchedChain = chain;
-            matchedParams = p;
-            matchedPattern = pattern;
-            break;
-          }
-        }
-      }
+      scanTable(routes.get("GET"));
     }
 
-    // Compose full stack
+    // Build execution stack
     const stack: ImplHandler[] = [...middlewares, ...matchedChain];
 
-    // Inject params on req for matched routes
+    // Inject params
     if (matchedParams) {
-      (req as any).params = matchedParams;
+      (reqX as any).params = matchedParams;
     }
 
     let i = 0;
-    const next = (err?: any) => {
-      if (err) return runErrors(err);
-      const layer = stack[i++];
-      if (layer) return layer(req, res, next);
 
-      // OPTIONS / 405 helpers when a path exists under other methods
-      if (method === "OPTIONS" && matchedPattern) {
-        const allow = allowedMethods(routes, matchedPattern).join(", ");
-        res.set("Allow", allow);
-        // per spec, OPTIONS on existing path is 204 No Content
-        // must not send body
-        return (res as Response<void>).status(204 as any).send();
-      }
-      if (!matchedChain.length && matchedPattern) {
-        const allow = allowedMethods(routes, matchedPattern).join(", ");
-        // 405 Method Not Allowed
-        // allow is required
-        res.set("Allow", allow);
-        res.statusCode = 405;
-        return (res as Response<void>).json({
-          error: "Method Not Allowed",
-          allow: allow.split(", "),
-        });
-      }
+    const finalizeNotFound = () => {
+      (resX as JsonRes).status(404).json({ error: "Not Found" });
+    };
 
-      // Fileserver fallthrough for GET/HEAD
-      if ((method === "GET" || method === "HEAD") && fileserver) {
-        return fileserver(req, res, finalizeNotFound);
+    const finalizeError = (e: any) => {
+      if (!(resX as any).headersSent) {
+        (resX as any).statusCode = e?.statusCode ?? 500;
+        (resX as any).json?.({ error: e?.message ?? "Internal Server Error" });
       }
-
-      return finalizeNotFound();
     };
 
     const runErrors = (err: any) => {
@@ -252,28 +240,110 @@ export function createApp(): App {
       const nextErr = (e?: any) => {
         const layer = errorMiddlewares[j++];
         if (!layer) return finalizeError(e ?? err);
-        return layer(e ?? err, req, res, nextErr);
+        try {
+          const maybe = layer(e ?? err, reqX, resX, nextErr);
+          if (maybe && typeof (maybe as any).then === "function") {
+            (maybe as Promise<void>).catch(nextErr);
+          }
+        } catch (inner) {
+          nextErr(inner);
+        }
       };
       nextErr(err);
     };
-    // error 404
-    const finalizeNotFound = () => {
-      res.status(404).json({ error: "Not Found" });
-    };
 
-    // error 500
-    const finalizeError = (e: any) => {
-      if (!(res as any).headersSent) {
-        res.statusCode = e?.statusCode ?? 500;
-        res.json({ error: e?.message ?? "Internal Server Error" });
+    const next = (err?: any) => {
+      if (err) return runErrors(err);
+      if ((resX as any).headersSent) return;
+
+      const layer = stack[i++];
+      if (layer) {
+        try {
+          const maybe = layer(reqX as any, resX as any, next);
+          if (maybe && typeof (maybe as any).then === "function") {
+            (maybe as Promise<void>).catch(next);
+          }
+        } catch (e) {
+          next(e);
+        }
+        return;
       }
+
+      // OPTIONS helper (only if the URL matches *some* registered pattern)
+      if (method === "OPTIONS") {
+        const allow = allowedMethods(routes, url);
+        if (allow.length) {
+          (resX as any).set?.("Allow", allow.join(", "));
+          // No body for 204
+          return (resX as Response<void>).status?.(204 as any).end?.();
+        }
+      }
+
+      // 405 if this path exists under other methods
+      if (!matchedChain.length) {
+        const allow = allowedMethods(routes, url);
+        if (allow.length) {
+          (resX as any).set?.("Allow", allow.join(", "));
+          (resX as any).statusCode = 405;
+          return (resX as any).json?.({
+            error: "Method Not Allowed",
+            allow,
+          });
+        }
+      }
+
+      // Fileserver fallthrough for GET/HEAD
+      if ((method === "GET" || method === "HEAD") && fileserver) {
+        return fileserver(reqX as any, resX as any, finalizeNotFound);
+      }
+
+      return finalizeNotFound();
     };
 
     next();
   };
 
+  // callable app
+  const app = handle as unknown as App;
+
+  function addVerb(method: Method) {
+    (app as any)[method.toLowerCase()] = (
+      path: string,
+      ...handlers: Handler[]
+    ) => {
+      const chain = handlers.map(asImpl);
+      const table = routes.get(method) ?? [];
+      table.push({ pattern: path, chain });
+      routes.set(method, table);
+      return app;
+    };
+  }
+  (
+    ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"] as const
+  ).forEach(addVerb);
+
+  // middlewares / error middlewares
+  (app as any).use = (first: any, ...rest: any[]) => {
+    if (isErrMw(first)) {
+      errorMiddlewares.push(asImplErr(first));
+    } else {
+      const flat = [first, ...rest].filter(Boolean) as Handler[];
+      middlewares.push(...flat.map(asImpl));
+    }
+    return app;
+  };
+
+  // fileserver (GET/HEAD fallthrough)
+  (app as any).fileserver = (fs: Function) => {
+    fileserver = asImpl(fs as any);
+    return app;
+  };
+
+  // optional explicit handle
+  (app as any).handle = handle;
+
   return app;
 }
 
-export type * from "./types.js";
-export default createApp;
+/* re-export your public types */
+export type { App, Handler, Request, Response } from "./types.js";
