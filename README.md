@@ -18,7 +18,7 @@ const rm = require("router-middleware").default; // ← yes, .default
 const app = rm();
 ```
 
-# quick start
+# quick start (ts)
 
 ```ts
 import http from "node:http";
