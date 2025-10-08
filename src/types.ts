@@ -59,6 +59,8 @@ export interface Registrar {
   ): void;
 
   use(fn: Handler | ErrorHandler): void;
+  // Built-in JSON body parser factory
+  jsonParser(opts?: JsonOptions): Handler<any, any, AnyParams>;
 }
 type NonVoid<T> = T extends void ? never : T;
 type PrimitivePayload = string | Buffer | Uint8Array;
@@ -110,3 +112,17 @@ export type AppType = RequestListener<
   typeof ServerResponse
 > &
   Registrar;
+
+export type ByteLimit = number | `${number}${"b" | "kb" | "mb" | "gb"}`;
+export interface JsonOptions {
+  limit?: ByteLimit; // default '1mb'
+  type?: string | RegExp; // default /application\/json/i
+  strict?: boolean; // reject primitives if true (default false)
+  keepRaw?: boolean; // attach req.rawBody as Buffer
+  onError?: (
+    err: Error,
+    req: Request<any>,
+    res: Response<any>,
+    next: Next
+  ) => void;
+}

@@ -66,6 +66,7 @@ export function jsonParser(opts: JsonOptions = {}) {
           return res.end("Invalid JSON (strict)");
         }
         req.body = val;
+        console.log("Attached body:", req.body);
         next();
       } catch (err: any) {
         if (opts.onError) return opts.onError(err, req, res, next);

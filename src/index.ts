@@ -13,6 +13,7 @@ import type {
   ErrorHandler,
 } from "./types.js";
 import { parseQueryFromURL } from "./query.js";
+import { jsonParser } from "./bodyParser.js";
 
 /* ---------- types ---------- */
 type JsonRes = Response<Record<string, unknown>>;
@@ -341,6 +342,9 @@ export default function createApp(): App {
 
   // optional explicit handle
   (app as any).handle = handle;
+
+  // built-in JSON body parser middleware
+  (app as any).jsonParser = jsonParser;
 
   return app;
 }

@@ -46,7 +46,6 @@ tape("use middleware test", async (t) => {
 
   let called = false;
   app.use((_req, _res, next) => {
-    console.log("in use middleware");
     called = true;
     next();
   });
@@ -64,7 +63,6 @@ tape("404 still uses middleware test", async (t) => {
   t.plan(1);
   let called = false;
   app.use((_req, _res, next) => {
-    console.log("in use middleware");
     called = true;
     next();
   });
@@ -88,5 +86,27 @@ tape("param test", async (t) => {
     .get("/user/bart/messages")
     .then((res) => {
       t.equal(res.text, "Hello bart!");
+    });
+});
+
+tape.only("post json test", async (t) => {
+  const app = rm();
+
+  // log every request
+  app.use((req, _res, next) => {
+    console.error("HIT", req.method, req.url); // stderr always shows
+    next();
+  });
+
+  app.post("/foobar", app.jsonParser(), (req, res) => {
+    const { name } = req.body as { name?: string };
+    res.json({ hello: name ?? "world" });
+  });
+  t.plan(1);
+  const res = await request(app)
+    .set("User-Agent", "Supertest-Light")
+    .post("/foobar", { name: "bart" })
+    .then((res) => {
+      t.deepEqual(res.body, { hello: "bart" });
     });
 });

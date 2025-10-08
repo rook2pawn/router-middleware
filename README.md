@@ -203,9 +203,13 @@ app.use((err, req, res, _next) => {
 
 ```ts
 // global
-app.use(rm.json({ limit: "1mb" }));
+app.use(app.jsonParser({ limit: "1mb" }));
 // or per route
-app.post("/ingest/trade", rm.json({ limit: "256kb", keepRaw: true }), handler);
+app.post(
+  "/ingest/trade",
+  app.jsonParser({ limit: "256kb", keepRaw: true }),
+  handler
+);
 ```
 
 ## body parser options
