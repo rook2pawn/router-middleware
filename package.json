@@ -21,6 +21,7 @@
     "clean": "rimraf dist",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx ./tests/all.tests.ts",
+    "dev": "tsc -w -p tsconfig.json",
     "tsd": "npm run build && tsd",
     "watch": "run-p \"tsc -w\" \"node --watch --test dist",
     "test:cov": "c8 --hook-run-in-context --extension .ts --extension .tsx --include src/**/*.ts --exclude src/**/*.d.ts --exclude file://** --exclude-after-remap node --import=tsx --test tests/index.test.ts"

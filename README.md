@@ -10,10 +10,12 @@ npm i router-middleware
 
 ```ts
 // ESM
-import rm from "router-middleware";
+import createApp from "router-middleware";
+const app = createApp();
 
 // CommonJS
-const rm = require("router-middleware");
+const rm = require("router-middleware").default; // ← yes, .default
+const app = rm();
 ```
 
 # quick start
@@ -25,20 +27,40 @@ import rm from "router-middleware";
 const app = rm();
 const server = http.createServer(app);
 
-// Fully typed params (`id` inferred as string)
-app.get("/user/:id", (req, res) => {
+// Enable JSON parsing for incoming requests (safe defaults: 1mb, application/json, etc.)
+app.use(app.jsonParser());
+
+// 1) Typed params — `id` inferred as string
+app.get<"/user/:id">("/user/:id", (req, res) => {
+  // req.params: { id: string }
   res.json({ id: req.params.id });
 });
 
-// Typed body + send
-app.post("/user/:id/email", (req, res) => {
-  // req.body is JSON-parsed (safe defaults), or throw 415/413/400
-  res.status(201).send({ ok: true });
+// 2) Typed body in and typed object out
+type UpdateEmailBody = { email: string };
+type UpdateEmailResult = { ok: true; id: string; email: string };
+
+app.post<"/user/:id/email", UpdateEmailBody, UpdateEmailResult>(
+  "/user/:id/email",
+  (req, res) => {
+    // req.body: { email: string }
+    // req.params: { id: string }
+    res.status(201).json({
+      ok: true,
+      id: req.params.id,
+      email: req.body.email,
+    });
+  }
+);
+
+// 3) If you want to send text (not JSON), use .send with a string/Buffer/Uint8Array
+app.get<"/health">("/health", (_req, res) => {
+  res.status(200).send("OK"); // not an object here
 });
 
 // Optional: error middleware (Express-style)
-app.use((err, req, res, _next) => {
-  res.status(err.statusCode || 500).json({ error: err.message });
+app.use((err, _req, res, _next) => {
+  res.status(err?.statusCode ?? 500).json({ error: err?.message ?? "error" });
 });
 
 server.listen(5150);
