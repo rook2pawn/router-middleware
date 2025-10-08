@@ -1,5 +1,7 @@
 router-middleware
 
+Tiny Express-style router with end to end typescript safety.
+
 # install
 
 ```bash

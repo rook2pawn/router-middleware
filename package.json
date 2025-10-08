@@ -15,6 +15,14 @@
   "files": [
     "dist"
   ],
+  "keywords": [
+    "router",
+    "middleware",
+    "typescript",
+    "express",
+    "nodejs",
+    "http server"
+  ],
   "sideEffects": false,
   "scripts": {
     "build": "npm run clean && npm run typecheck && tsup src/index.ts --format esm,cjs --dts --out-dir dist --clean --sourcemap",
