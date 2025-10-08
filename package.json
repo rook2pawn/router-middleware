@@ -1,6 +1,6 @@
 {
   "name": "router-middleware",
-  "version": "6.0.6",
+  "version": "6.0.7",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
