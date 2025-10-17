@@ -435,6 +435,20 @@ function createApp(): App {
 }
 
 /* re-export your public types */
-export type { App, Handler, Request, Response } from "./types.js";
+export type {
+  App,
+  AppType,
+  Registrar,
+  Handler,
+  ErrorHandler,
+  Next,
+  Request,
+  Response,
+  AnyParams,
+  PathParams,
+  JsonOptions,
+  ByteLimit,
+} from "./types.js";
+
 export { Router }; // re-export for named import
 export default createApp; // default export is the app factory

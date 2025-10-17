@@ -73,49 +73,6 @@ export interface Registrar {
   // Built-in JSON body parser factory
   jsonParser(opts?: JsonOptions): Handler<any, any, AnyParams>;
 }
-// Deprecated: old Registrar interface
-/*
-export interface Registrar {
-  get<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  post<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  put<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  patch<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  delete<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  head<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  options<Path extends string, RB = unknown, RO = unknown>(
-    path: Path,
-    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
-  ): void;
-
-  use(fn: Handler | ErrorHandler): void;
-  // Built-in JSON body parser factory
-  jsonParser(opts?: JsonOptions): Handler<any, any, AnyParams>;
-}
-*/
 type NonVoid<T> = T extends void ? never : T;
 type PrimitivePayload = string | Buffer | Uint8Array;
 type ObjectLike = Record<string, unknown>;
