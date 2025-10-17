@@ -61,15 +61,12 @@ export interface Registrar {
 
   // --- use() overloads ---
   // global middleware(s)
-  use(fn: Handler | ErrorHandler, ...more: Array<Handler | ErrorHandler>): this;
+  use(fn: Handler, ...more: Handler[]): this;
+  use(fn: ErrorHandler, ...more: ErrorHandler[]): this;
 
   // prefix-scoped middleware(s)
-  use(
-    prefix: string,
-    fn: Handler | ErrorHandler,
-    ...more: Array<Handler | ErrorHandler>
-  ): this;
-
+  use(prefix: string, fn: Handler, ...more: Handler[]): this;
+  use(prefix: string, fn: ErrorHandler, ...more: ErrorHandler[]): this;
   // mount a child router (keep it 'unknown' to avoid circular type deps)
   use(prefix: string, router: unknown): this;
 
