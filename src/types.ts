@@ -23,6 +23,62 @@ export type Request<
 };
 
 export interface Registrar {
+  // Route verbs (fluent)
+  get<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  post<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  put<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  patch<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  delete<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  head<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  options<Path extends string, RB = unknown, RO = unknown>(
+    path: Path,
+    ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
+  ): this;
+
+  // --- use() overloads ---
+  // global middleware(s)
+  use(fn: Handler | ErrorHandler, ...more: Array<Handler | ErrorHandler>): this;
+
+  // prefix-scoped middleware(s)
+  use(
+    prefix: string,
+    fn: Handler | ErrorHandler,
+    ...more: Array<Handler | ErrorHandler>
+  ): this;
+
+  // mount a child router (keep it 'unknown' to avoid circular type deps)
+  use(prefix: string, router: unknown): this;
+
+  // Built-in JSON body parser factory
+  jsonParser(opts?: JsonOptions): Handler<any, any, AnyParams>;
+}
+// Deprecated: old Registrar interface
+/*
+export interface Registrar {
   get<Path extends string, RB = unknown, RO = unknown>(
     path: Path,
     ...handlers: OneOrMore<Handler<RB, RO, PathParams<Path>>>
@@ -62,6 +118,7 @@ export interface Registrar {
   // Built-in JSON body parser factory
   jsonParser(opts?: JsonOptions): Handler<any, any, AnyParams>;
 }
+*/
 type NonVoid<T> = T extends void ? never : T;
 type PrimitivePayload = string | Buffer | Uint8Array;
 type ObjectLike = Record<string, unknown>;
@@ -94,11 +151,6 @@ export type ErrorHandler<
 
 type OneOrMore<T> = [T, ...T[]];
 
-/*
-export interface App
-  extends Registrar,
-    RequestListener<typeof IncomingMessage, typeof ServerResponse> {}
-    */
 export type App = RequestListener<
   typeof IncomingMessage,
   typeof ServerResponse

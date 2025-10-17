@@ -74,6 +74,46 @@ curl -X POST -H "content-type: application/json" \
   "http://localhost:5150/user/abc123/email"
 ```
 
+# Router for prefix based middleware
+
+## Basics
+
+```ts
+import rm from "router-middleware";
+import { Router } from "router-middleware/router";
+
+const app = rm();
+const v1 = new Router();
+
+v1.get("/strategies", (_req, res) => res.send("list"));
+v1.post("/strategies", app.jsonParser(), (req, res) => res.json(req.body));
+
+// Mount everything under /api/v1  →  /api/v1/strategies
+app.use("/api/v1", v1);
+```
+
+## Prefix-scoped middleware
+
+```ts
+// runs only for /api/v1 and below
+app.use("/api/v1", (req, _res, next) => {
+  (req as any).ctx = "v1";
+  next();
+});
+```
+
+## Nested routers
+
+```ts
+const api = new Router();
+const v2 = new Router();
+
+v2.get("/ping", (_req, res) => res.send("pong"));
+
+api.use("/v2", v2); // /api/v2/ping
+app.use("/api", api);
+```
+
 # primary usage patterns and rules
 
 ### usage patterns
@@ -161,12 +201,14 @@ curl -i "http://127.0.0.1:3000/echo?q=bart"
 ## More examples of strongly typed handlers
 
 ```ts
-// Strongly typed Response body:
+// Handlers are strongly typed:
 app.get<"/ping", unknown, { ok: true }>("/ping", (_req, res) => {
   // res.send enforces { ok: true }
   res.json({ ok: true });
 });
+```
 
+```ts
 // If you want typed queries/bodies:
 type Q = { search?: string };
 type B = { email: string };
@@ -179,14 +221,121 @@ app.post<"/user/:id/email", Q, B, R>("/user/:id/email", (req, res) => {
 });
 ```
 
+GET with path params + typed JSON response
+
+```ts
+// <Path, RB=unknown, RO=ResponseBody>
+app.get<"/users/:id", unknown, { id: string; name: string }>(
+  "/users/:id",
+  (req, res) => {
+    // req.params.id: string
+    res.json({ id: req.params.id, name: "Ada" });
+  }
+);
+```
+
+GET with typed query object (string | string[])
+
+```ts
+type UserQuery = { q?: string | string[]; limit?: string };
+app.get<"/users", unknown, { items: string[] }>(
+  "/users",
+  (req: Request<unknown, AnyParams, UserQuery>, res) => {
+    const { q, limit } = req.query ?? {};
+    const n = Number(limit ?? 10) || 10;
+    const term = Array.isArray(q) ? q[0] : q;
+    res.json({ items: Array(n).fill(term ?? "user") });
+  }
+);
+```
+
+POST create with JSON body + 201 + Location
+
+```ts
+type CreateUser = { name: string; email: string };
+type CreateOut = { id: string };
+
+app.post<"/users", CreateUser, CreateOut>(
+  "/users",
+  app.jsonParser(),
+  (req, res) => {
+    const { name, email } = req.body; // typed
+    const id = crypto.randomUUID();
+    res.set("Location", `/users/${id}`).status(201).json({ id });
+  }
+);
+```
+
+POST batch (array body) → summary object
+
+```ts
+type BatchIn = Array<{ name: string }>;
+type BatchOut = { created: number };
+
+app.post<"/users:batch", BatchIn, BatchOut>(
+  "/users:batch",
+  app.jsonParser(),
+  (req, res) => {
+    res.json({ created: req.body.length });
+  }
+);
+```
+
+PATCH partial update (typed partial body)
+
+```ts
+type UserPatch = Partial<{ name: string; email: string }>;
+type UserOut = { id: string; name?: string; email?: string };
+
+app.patch<"/users/:id", UserPatch, UserOut>(
+  "/users/:id",
+  app.jsonParser(),
+  (req, res) => {
+    res.json({ id: req.params.id, ...req.body });
+  }
+);
+```
+
+GET that returns plain text (typed send)
+
+```ts
+app.get<"/health", unknown, string>("/health", (_req, res) => {
+  res.send("ok");
+});
+```
+
+POST with simple validation middleware (still typed)
+
+```ts
+type LoginIn = { username: string; password: string };
+type LoginOut = { token: string };
+
+const requireFields: Handler<LoginIn> = (req, _res, next) => {
+  if (!req.body?.username || !req.body?.password)
+    return next(new Error("bad request"));
+  next();
+};
+
+app.post<"/login", LoginIn, LoginOut>(
+  "/login",
+  app.jsonParser(),
+  requireFields,
+  (req, res) => {
+    res.json({ token: "abc123" });
+  }
+);
+```
+
+Reminder of the signature order: app.METHOD< Path, RequestBody, ResponseBody >(path, ...handlers).
+For GETs, RequestBody is usually unknown; for endpoints that read req.query, you can narrow Request<unknown, Params, YourQuery> in the handler arg for clean query typing.
+
 # Param inference from path
 
 ```ts
-app.get("/teams/:teamId/members/:memberId", (req, res) => {
-  // req.params.teamId: string
-  // req.params.memberId: string
-  res.json(req.params);
-});
+app.get("/users/:id", (req, res) => res.send(req.params.id));
+app.put("/users/:id", (req, res) => res.end());
+app.delete("/users/:id", (req, res) => res.end());
+// Also: post, patch, head, options
 ```
 
 # Fileserver fall-through

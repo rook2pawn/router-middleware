@@ -89,15 +89,8 @@ tape("param test", async (t) => {
     });
 });
 
-tape.only("post json test", async (t) => {
+tape("post json test", async (t) => {
   const app = rm();
-
-  // log every request
-  app.use((req, _res, next) => {
-    console.error("HIT", req.method, req.url); // stderr always shows
-    next();
-  });
-
   app.post("/foobar", app.jsonParser(), (req, res) => {
     const { name } = req.body as { name?: string };
     res.json({ hello: name ?? "world" });

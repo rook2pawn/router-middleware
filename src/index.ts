@@ -14,6 +14,7 @@ import type {
 } from "./types.js";
 import { parseQueryFromURL } from "./query.js";
 import { jsonParser } from "./bodyParser.js";
+import { Router, type Route, norm, join } from "./router.js";
 
 /* ---------- types ---------- */
 type JsonRes = Response<Record<string, unknown>>;
@@ -35,6 +36,63 @@ type MethodMap = Map<string, RouteEntry[]>; // method -> list of (pattern, chain
 type NodeReqBits = {}; // internal additions if you want
 
 /* ---------- tiny helpers ---------- */
+
+// guardMw stages the prefixMatch test before invoking the real middleware
+// part of the helpers for router.use(prefix, fn)
+function guardMw(prefix: string, fn: Handler): ImplHandler {
+  const impl = asImpl(fn);
+  const p = norm(prefix);
+  return (req, res, next) => {
+    const urlPath = (req.url || "/").split("?")[0];
+    if (prefixMatch(urlPath, p)) return impl(req, res, next);
+    next(); // skip if outside prefix
+  };
+}
+
+// guardErrMw stages the prefixMatch test before invoking the real error middleware
+// part of the helpers for router.use(prefix, fn)
+function guardErrMw(prefix: string, fn: ErrorHandler): ImplErrorHandler {
+  const impl = asImplErr(fn);
+  const p = norm(prefix);
+  return (err, req, res, next) => {
+    const urlPath = (req.url || "/").split("?")[0];
+    if (prefixMatch(urlPath, p)) return impl(err, req, res, next);
+    next(err); // keep propagating error if outside prefix
+  };
+}
+
+function getChildRoutes(r: Router) {
+  return (r as any).exportRoutes
+    ? (r as any).exportRoutes()
+    : (r as any).routes ?? [];
+}
+function getChildMws(r: Router) {
+  return (r as any).exportMiddlewares
+    ? (r as any).exportMiddlewares()
+    : (r as any).middlewares ?? [];
+}
+
+function prefixMatch(urlPath: string, prefix: string) {
+  return urlPath === prefix || urlPath.startsWith(prefix + "/");
+}
+
+function ensureTable(routes: MethodMap, method: Method): RouteEntry[] {
+  let table = routes.get(method);
+  if (!table) {
+    table = [];
+    routes.set(method, table);
+  }
+  return table;
+}
+function mountRouter(prefix: string, child: Router, routes: MethodMap) {
+  const p = norm(prefix);
+  for (const cr of getChildRoutes(child)) {
+    const full = join(p, cr.path);
+    const table = ensureTable(routes, cr.method as Method);
+    table.push({ pattern: full, chain: cr.handlers.map(asImpl) });
+  }
+}
+
 function isErrMw(fn: Function) {
   return fn.length === 4;
 }
@@ -325,15 +383,42 @@ export default function createApp(): App {
 
   // middlewares / error middlewares
   (app as any).use = (first: any, ...rest: any[]) => {
-    if (isErrMw(first)) {
-      errorMiddlewares.push(asImplErr(first));
-    } else {
-      const flat = [first, ...rest].filter(Boolean) as Handler[];
-      middlewares.push(...flat.map(asImpl));
+    // 1) use(fn[, fn...]) — global middleware(s) and/or error middleware(s)
+    if (
+      typeof first === "function" &&
+      (rest.length === 0 || typeof rest[0] === "function")
+    ) {
+      const fns = [first, ...rest].filter(Boolean);
+      for (const fn of fns) {
+        if (isErrMw(fn)) errorMiddlewares.push(asImplErr(fn));
+        else middlewares.push(asImpl(fn));
+      }
+      return app;
     }
-    return app;
-  };
 
+    // 2) use(prefix, router)
+    if (typeof first === "string" && rest[0] instanceof Router) {
+      if (rest.length > 1)
+        throw new Error("use(prefix, router) expects exactly 2 args");
+      mountRouter(first, rest[0] as Router, routes);
+      return app;
+    }
+
+    // 3) use(prefix, fn[, fn...]) — prefix-scoped middleware(s)
+    if (typeof first === "string" && typeof rest[0] === "function") {
+      const prefix = first;
+      const fns = rest.filter(Boolean);
+      for (const fn of fns) {
+        if (isErrMw(fn)) errorMiddlewares.push(guardErrMw(prefix, fn));
+        else middlewares.push(guardMw(prefix, fn));
+      }
+      return app;
+    }
+
+    throw new Error(
+      "use(fn...), use(prefix, fn...), or use(prefix, router) expected"
+    );
+  };
   // fileserver (GET/HEAD fallthrough)
   (app as any).fileserver = (fs: Function) => {
     fileserver = asImpl(fs as any);
