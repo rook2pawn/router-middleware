@@ -79,8 +79,7 @@ curl -X POST -H "content-type: application/json" \
 ## Basics
 
 ```ts
-import rm from "router-middleware";
-import { Router } from "router-middleware/router";
+import rm, { Router } from "router-middleware";
 
 const app = rm();
 const v1 = new Router();

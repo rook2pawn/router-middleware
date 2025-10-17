@@ -227,7 +227,7 @@ function augmentRes<T>(res: Response<T>): Response<T> {
 }
 
 /* ---------- app factory ---------- */
-export default function createApp(): App {
+function createApp(): App {
   const routes: MethodMap = new Map(); // method -> [{pattern, chain}]
   const middlewares: ImplHandler[] = [];
   const errorMiddlewares: ImplErrorHandler[] = [];
@@ -436,3 +436,5 @@ export default function createApp(): App {
 
 /* re-export your public types */
 export type { App, Handler, Request, Response } from "./types.js";
+export { Router }; // re-export for named import
+export default createApp; // default export is the app factory
