@@ -93,9 +93,6 @@ function mountRouter(prefix: string, child: Router, routes: MethodMap) {
   }
 }
 
-function isErrMw(fn: Function) {
-  return fn.length === 4;
-}
 function asImpl(h: Handler<any, any, any>): ImplHandler {
   return (req, res, next) => {
     try {
@@ -381,36 +378,35 @@ function createApp(): App {
     ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"] as const
   ).forEach(addVerb);
 
-  // middlewares / error middlewares
+  // NORMAL middlewares only + router mount
   (app as any).use = (first: any, ...rest: any[]) => {
-    // 1) use(fn[, fn...]) — global middleware(s) and/or error middleware(s)
+    // 1) use(fn[, fn...]) — global normal middlewares
     if (
       typeof first === "function" &&
       (rest.length === 0 || typeof rest[0] === "function")
     ) {
       const fns = [first, ...rest].filter(Boolean);
       for (const fn of fns) {
-        if (isErrMw(fn)) errorMiddlewares.push(asImplErr(fn));
-        else middlewares.push(asImpl(fn));
+        // assume fn: Handler
+        middlewares.push(asImpl(fn)); // no error-detection here
       }
       return app;
     }
 
-    // 2) use(prefix, router)
+    // 2) use(prefix, router) — mount child router (kept on .use)
     if (typeof first === "string" && rest[0] instanceof Router) {
-      if (rest.length > 1)
+      if (rest.length !== 1)
         throw new Error("use(prefix, router) expects exactly 2 args");
       mountRouter(first, rest[0] as Router, routes);
       return app;
     }
 
-    // 3) use(prefix, fn[, fn...]) — prefix-scoped middleware(s)
+    // 3) use(prefix, fn[, fn...]) — prefix-scoped normal middlewares
     if (typeof first === "string" && typeof rest[0] === "function") {
       const prefix = first;
       const fns = rest.filter(Boolean);
       for (const fn of fns) {
-        if (isErrMw(fn)) errorMiddlewares.push(guardErrMw(prefix, fn));
-        else middlewares.push(guardMw(prefix, fn));
+        middlewares.push(guardMw(prefix, fn)); // wrap with prefix guard
       }
       return app;
     }
@@ -419,6 +415,35 @@ function createApp(): App {
       "use(fn...), use(prefix, fn...), or use(prefix, router) expected"
     );
   };
+
+  // ERROR middlewares only
+  (app as any).useError = (first: any, ...rest: any[]) => {
+    // 1) useError(fn[, fn...]) — global error middlewares
+    if (
+      typeof first === "function" &&
+      (rest.length === 0 || typeof rest[0] === "function")
+    ) {
+      const fns = [first, ...rest].filter(Boolean);
+      for (const fn of fns) {
+        // assume fn: ErrorHandler
+        errorMiddlewares.push(asImplErr(fn));
+      }
+      return app;
+    }
+
+    // 2) useError(prefix, fn[, fn...]) — prefix-scoped error middlewares
+    if (typeof first === "string" && typeof rest[0] === "function") {
+      const prefix = first;
+      const fns = rest.filter(Boolean);
+      for (const fn of fns) {
+        errorMiddlewares.push(guardErrMw(prefix, fn)); // wrap with prefix guard
+      }
+      return app;
+    }
+
+    throw new Error("useError(fn...) or useError(prefix, fn...) expected");
+  };
+
   // fileserver (GET/HEAD fallthrough)
   (app as any).fileserver = (fs: Function) => {
     fileserver = asImpl(fs as any);

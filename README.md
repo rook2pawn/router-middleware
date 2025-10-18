@@ -60,8 +60,7 @@ app.get<"/health">("/health", (_req, res) => {
   res.status(200).send("OK"); // not an object here
 });
 
-// Optional: error middleware (Express-style)
-app.use((err, _req, res, _next) => {
+app.useError((err, _req, res, _next) => {
   res.status(err?.statusCode ?? 500).json({ error: err?.message ?? "error" });
 });
 
@@ -156,7 +155,7 @@ res.status(400).json({ error: "Bad request" });
 # features
 
 - Routing: app.get/post/put/delete/patch/head/options(path, handler)
-- Middleware: app.use(fn) (either “regular” or error (err, req, res, next) middleware)
+- Middleware: app.use(fn) or prefix specific app.use(prefix, fn)
 - Fileserver: app.fileserver(fn) (falls through unmatched GET routes to your static handler)
 
 ## Helpers on res:
@@ -360,10 +359,12 @@ app.fileserver(ecstatic({ root: __dirname + "/public" }));
 server.listen(5150);
 ```
 
-# error handling
+# error handling (PENDING TODO)
+
+as of 10-17-2025 this is a TODO
 
 ```ts
-app.use((err, req, res, _next) => {
+app.useError((err, req, res, _next) => {
   if (res.headersSent) return;
   res
     .status(err.statusCode || 500)

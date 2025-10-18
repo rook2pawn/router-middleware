@@ -62,13 +62,14 @@ export interface Registrar {
   // --- use() overloads ---
   // global middleware(s)
   use(fn: Handler, ...more: Handler[]): this;
-  use(fn: ErrorHandler, ...more: ErrorHandler[]): this;
-
   // prefix-scoped middleware(s)
   use(prefix: string, fn: Handler, ...more: Handler[]): this;
-  use(prefix: string, fn: ErrorHandler, ...more: ErrorHandler[]): this;
   // mount a child router (keep it 'unknown' to avoid circular type deps)
   use(prefix: string, router: unknown): this;
+
+  // explicit error middleware
+  useError(fn: ErrorHandler, ...more: ErrorHandler[]): this;
+  useError(prefix: string, fn: ErrorHandler, ...more: ErrorHandler[]): this;
 
   // Built-in JSON body parser factory
   jsonParser(opts?: JsonOptions): Handler<any, any, AnyParams>;
@@ -105,19 +106,11 @@ export type ErrorHandler<
 
 type OneOrMore<T> = [T, ...T[]];
 
-export type App = RequestListener<
-  typeof IncomingMessage,
-  typeof ServerResponse
-> &
-  Registrar;
+export type App = RequestListener & Registrar;
 
 // intersection type to get both call signature and methods
 // for consumers
-export type AppType = RequestListener<
-  typeof IncomingMessage,
-  typeof ServerResponse
-> &
-  Registrar;
+export type AppType = App;
 
 export type ByteLimit = number | `${number}${"b" | "kb" | "mb" | "gb"}`;
 export interface JsonOptions {
